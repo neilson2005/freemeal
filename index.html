@@ -231,15 +231,13 @@
 </head>
 <body>
 
-<!-- Loader -->
 <div id="loader">
   <div class="spinner"></div>
-  <p class="loader-text">loading data from sheets…</p>
+  <p class="loader-text">loading data...</p>
 </div>
 
 <div class="shell">
 
-  <!-- Header -->
   <header>
     <div class="header-left">
       <h1>Free Meal <span>Dashboard</span></h1>
@@ -251,7 +249,6 @@
     </div>
   </header>
 
-  <!-- Controls -->
   <div class="controls">
     <div>
       <label>Departure date</label>
@@ -280,13 +277,10 @@
     <button class="btn-refresh" onclick="loadData()">↺ Refresh</button>
   </div>
 
-  <!-- Error -->
   <div class="error-box" id="errorBox"></div>
 
-  <!-- Metrics -->
   <div class="metrics" id="metrics"></div>
 
-  <!-- View 1 + 2 -->
   <div class="grid-2">
     <div class="panel">
       <p class="panel-title">01 — SSR count by date &amp; duration</p>
@@ -300,27 +294,20 @@
     </div>
   </div>
 
-  <!-- View 3 -->
   <div class="grid-1 panel" style="margin-bottom:16px">
     <p class="panel-title">03 — Top sectors by SSR count</p>
     <div class="chart-wrap" id="c3wrap" style="height:280px"><canvas id="c3" role="img" aria-label="Horizontal bar chart of SSR count per route sector"></canvas></div>
   </div>
 
-  <!-- View 4 -->
   <div class="grid-1 panel">
     <p class="panel-title">04 — FREEMEAL vs paid meal split</p>
     <div class="legend" id="leg4"></div>
     <div class="chart-wrap" style="height:220px"><canvas id="c4" role="img" aria-label="Stacked bar chart showing FREEMEAL versus paid meal SSR counts by flight type"></canvas></div>
   </div>
 
-</div><!-- /shell -->
-
-<script>
+</div><script>
 // ── CONFIG ────────────────────────────────────────────────
-// Replace with your actual Spreadsheet ID and the Summary sheet name
-// The sheet MUST be published: File → Share → Publish to web
-const SHEET_ID   = '1EF5ADeWpdKY2b5ySnQO4YURp-jvn0_Y67HnkHO-6ORE';
-const SHEET_NAME = 'Summary';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyTj2jrf8FtpO45SyILZjn56uJD-EfyHGuiGa2fTIr1giiYkae1vACjGcxIpsbw_P-UuA/exec';
 // ──────────────────────────────────────────────────────────
 
 let allRows = [];
@@ -331,63 +318,50 @@ async function loadData() {
   showLoader(true);
   hideError();
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-    const res  = await fetch(url);
+    const res = await fetch(WEB_APP_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    // Strip Google's callback wrapper: /*O_o*/ google.visualization.Query.setResponse({...});
-    const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    allRows = parseGviz(json);
+    
+    // 直接获取干净的二维数组数据
+    allRows = await res.json(); 
+    
     populateFilters();
     render();
   } catch(e) {
-    showError('Could not load data from Google Sheets. Make sure the sheet is published (File → Share → Publish to web) and SHEET_ID is set correctly.<br><br>Error: ' + e.message);
+    showError('Could not load data. Error: ' + e.message);
   } finally {
     showLoader(false);
   }
 }
 
-// ── PARSE GVIZ ────────────────────────────────────────────
-// Sheets gviz/tq returns a DataTable; parse into array of objects
-function parseGviz(json) {
-  const cols = json.table.cols.map(c => c.label);
-  return (json.table.rows || []).map(r => {
-    const obj = {};
-    cols.forEach((c, i) => { obj[c] = r.c[i] ? r.c[i].v : null; });
-    return obj;
-  });
-}
-
-// The Summary sheet has four sections separated by blank rows and header rows.
-// We parse each section into a structured array.
+// ── PARSE SECTIONS ────────────────────────────────────────
+// 直接解析二维数组结构
 function parseSections(raw) {
   const meta     = {};
   const v1 = [], v2 = [], v3 = [], v4 = [];
   let section = null;
 
   raw.forEach(row => {
-    const first = String(row[Object.keys(row)[0]] ?? '').trim();
+    const first = String(row[0] || '').trim();
     if (!first) { section = null; return; }
 
-    if (first === 'pipeline_run_date') { meta.pipeline_run_date = row[Object.keys(row)[1]]; return; }
-    if (first === 'total_ssr_count')   { meta.total_ssr_count   = row[Object.keys(row)[1]]; return; }
-    if (first === 'unique_flights')    { meta.unique_flights     = row[Object.keys(row)[1]]; return; }
-    if (first === 'unique_sectors')    { meta.unique_sectors     = row[Object.keys(row)[1]]; return; }
+    if (first === 'pipeline_run_date') { meta.pipeline_run_date = row[1]; return; }
+    if (first === 'total_ssr_count')   { meta.total_ssr_count   = row[1]; return; }
+    if (first === 'unique_flights')    { meta.unique_flights    = row[1]; return; }
+    if (first === 'unique_sectors')    { meta.unique_sectors    = row[1]; return; }
 
     if (first === '[view1] by_date_duration') { section = 'v1'; return; }
     if (first === '[view2] by_carrier')       { section = 'v2'; return; }
     if (first === '[view3] by_sector')        { section = 'v3'; return; }
     if (first === '[view4] by_promo')         { section = 'v4'; return; }
 
-    // Skip header rows (they contain column name strings like 'departure_date')
+    // 跳过小标题所在的行
     if (first === 'departure_date' || first === 'carrier_code' ||
         first === 'sector' || first === 'booking_promo_code') return;
 
-    const vals = Object.values(row);
-    if (section === 'v1') v1.push({ date: vals[0], dur: vals[1], promo: vals[2], ssr_count: +vals[3]||0, unique_pax: +vals[4]||0 });
-    if (section === 'v2') v2.push({ carrier: vals[0], dur: vals[1], promo: vals[2], ssr_count: +vals[3]||0, unique_pax: +vals[4]||0 });
-    if (section === 'v3') v3.push({ sector: vals[0], dep: vals[1], arr: vals[2], flight_type: vals[3], dur: vals[4], promo: vals[5], ssr_count: +vals[6]||0, unique_pax: +vals[7]||0 });
-    if (section === 'v4') v4.push({ promo: vals[0], flight_type: vals[1], ssr_code: vals[2], ssr_count: +vals[3]||0, unique_pax: +vals[4]||0 });
+    if (section === 'v1') v1.push({ date: row[0], dur: row[1], promo: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
+    if (section === 'v2') v2.push({ carrier: row[0], dur: row[1], promo: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
+    if (section === 'v3') v3.push({ sector: row[0], dep: row[1], arr: row[2], flight_type: row[3], dur: row[4], promo: row[5], ssr_count: +row[6]||0, unique_pax: +row[7]||0 });
+    if (section === 'v4') v4.push({ promo: row[0], flight_type: row[1], ssr_code: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
   });
 
   return { meta, v1, v2, v3, v4 };
