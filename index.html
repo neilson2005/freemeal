@@ -12,7 +12,6 @@
   :root {
     --bg:        #f5f6f8;
     --surface:   #ffffff;
-    --surface2:  #f0f1f3;
     --border:    #e2e5ea;
     --accent:    #D0021B;
     --accent2:   #e8722a;
@@ -37,11 +36,19 @@
   .badge.live { border-color: var(--accent); color: var(--accent); background: #fff0f0; }
 
   /* ── Controls ────────────────────────────── */
-  .controls { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; align-items: flex-end; }
   .controls label { font-size: 11px; color: var(--muted); font-family: var(--mono); display: block; margin-bottom: 4px; }
-  .controls select { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 6px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; min-width: 140px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .controls select { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 6px; cursor: pointer; min-width: 140px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  
+  /* 多选框特定样式 */
+  .controls select[multiple] { height: auto; min-height: 70px; background-image: none; padding: 4px; }
+  .controls select[multiple] option { padding: 6px 10px; margin-bottom: 2px; border-radius: 4px; }
+  .controls select[multiple] option:checked { background-color: var(--accent); color: white; }
+  .controls-hint { font-size: 9px; color: var(--muted); display: block; margin-top: 4px; }
+
+  .controls select:not([multiple]) { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
   .controls select:hover { border-color: var(--accent); }
-  .btn-refresh { background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 6px 18px; border-radius: 6px; cursor: pointer; align-self: flex-end; transition: background .15s; }
+  .btn-refresh { background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 6px 18px; border-radius: 6px; cursor: pointer; align-self: stretch; transition: background .15s; margin-bottom: 22px; }
   .btn-refresh:hover { background: #b0011a; }
 
   /* ── Metric cards ────────────────────────── */
@@ -86,10 +93,25 @@
   </header>
 
   <div class="controls">
-    <div><label>Departure date</label><select id="fDate" onchange="render()"><option value="all">All dates</option></select></div>
-    <div><label>Duration</label><select id="fDur" onchange="render()"><option value="all">All durations</option><option value="< 75 mins">< 75 mins</option><option value=">= 75 mins">>= 75 mins</option></select></div>
-    <div><label>Carrier</label><select id="fCarrier" onchange="render()"><option value="all">All carriers</option></select></div>
-    <div><label>Promo</label><select id="fPromo" onchange="render()"><option value="all">All</option><option value="FREEMEAL">FREEMEAL only</option><option value="null">Paid meals only</option></select></div>
+    <div>
+      <label>Booking Creation Date</label>
+      <select id="fDate" multiple onchange="render()">
+        <option value="all" selected>All dates</option>
+      </select>
+      <span class="controls-hint">Hold Cmd/Ctrl to multi-select</span>
+    </div>
+    <div>
+      <label>Duration</label>
+      <select id="fDur" onchange="render()"><option value="all">All durations</option><option value="< 75 mins">< 75 mins</option><option value=">= 75 mins">>= 75 mins</option></select>
+    </div>
+    <div>
+      <label>Carrier</label>
+      <select id="fCarrier" onchange="render()"><option value="all">All carriers</option></select>
+    </div>
+    <div>
+      <label>Promo</label>
+      <select id="fPromo" onchange="render()"><option value="all">All</option><option value="FREEMEAL">FREEMEAL only</option><option value="null">Paid meals only</option></select>
+    </div>
     <button class="btn-refresh" onclick="loadData()">↺ Refresh</button>
   </div>
 
@@ -144,6 +166,7 @@ async function loadData() {
   }
 }
 
+// 现在的数据包含了 booking_date，它是 row[0]
 function parseSections(raw) {
   const meta = {};
   const v1 = [], v2 = [], v3 = [], v4 = [], v5 = [];
@@ -164,17 +187,15 @@ function parseSections(raw) {
     if (first === '[view4] by_promo')         { section = 'v4'; return; }
     if (first === '[view5] by_flight')        { section = 'v5'; return; }
 
-    if (first === 'departure_date' || first === 'carrier_code' || first === 'sector' || first === 'booking_promo_code') return;
+    if (first === 'booking_date' || first === 'departure_date' || first === 'carrier_code' || first === 'sector' || first === 'booking_promo_code') return;
 
     const toDate = v => v ? String(v).slice(0, 10) : null;
 
-    if (section === 'v1') v1.push({ date: toDate(row[0]), dur: row[1], promo: row[2], ssr_count: +row[3]||0 });
-    if (section === 'v2') v2.push({ carrier: row[0], dur: row[1], promo: row[2], ssr_count: +row[3]||0 });
-    if (section === 'v3') v3.push({ sector: row[0], flight_type: row[3], dur: row[4], promo: row[5], ssr_count: +row[6]||0 });
-    if (section === 'v4') v4.push({ promo: row[0], flight_type: row[1], ssr_code: row[2], ssr_count: +row[3]||0 });
-    if (section === 'v5') {
-      v5.push({ date: toDate(row[0]), carrier: row[1], flight: row[2], promo: row[3], ssr_count: +row[4]||0 });
-    }
+    if (section === 'v1') v1.push({ bDate: toDate(row[0]), date: toDate(row[1]), dur: row[2], promo: row[3], ssr_count: +row[4]||0 });
+    if (section === 'v2') v2.push({ bDate: toDate(row[0]), carrier: row[1], dur: row[2], promo: row[3], ssr_count: +row[4]||0 });
+    if (section === 'v3') v3.push({ bDate: toDate(row[0]), sector: row[1], flight_type: row[4], dur: row[5], promo: row[6], ssr_count: +row[7]||0 });
+    if (section === 'v4') v4.push({ bDate: toDate(row[0]), promo: row[1], flight_type: row[2], ssr_code: row[3], ssr_count: +row[4]||0 });
+    if (section === 'v5') v5.push({ bDate: toDate(row[0]), date: toDate(row[1]), carrier: row[2], flight: row[3], promo: row[4], ssr_count: +row[5]||0 });
   });
 
   return { meta, v1, v2, v3, v4, v5 };
@@ -182,20 +203,29 @@ function parseSections(raw) {
 
 function populateFilters() {
   const { v1, v2 } = parseSections(allRows);
-  const dates = [...new Set(v1.map(r => r.date).filter(Boolean))].sort();
+  const bDates = [...new Set(v1.map(r => r.bDate).filter(Boolean))].sort();
   const carriers = [...new Set(v2.map(r => r.carrier).filter(Boolean))].sort();
 
-  document.getElementById('fDate').innerHTML = '<option value="all">All dates</option>' + dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  document.getElementById('fDate').innerHTML = '<option value="all" selected>All dates</option>' + bDates.map(d => `<option value="${d}">${d}</option>`).join('');
   document.getElementById('fCarrier').innerHTML = '<option value="all">All carriers</option>' + carriers.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
 function getFilters() {
-  return { date: document.getElementById('fDate').value, dur: document.getElementById('fDur').value, carrier: document.getElementById('fCarrier').value, promo: document.getElementById('fPromo').value };
+  const fDate = document.getElementById('fDate');
+  const selectedDates = Array.from(fDate.selectedOptions).map(opt => opt.value);
+  return { 
+    dates: selectedDates.length === 0 ? ['all'] : selectedDates, 
+    dur: document.getElementById('fDur').value, 
+    carrier: document.getElementById('fCarrier').value, 
+    promo: document.getElementById('fPromo').value 
+  };
 }
 
 function applyFilters(arr, keyMap, f) {
   return arr.filter(r => {
-    if (f.date !== 'all' && keyMap.date && r[keyMap.date] !== f.date) return false;
+    // 处理多选日期：如果选中了特定的日期（且没有选中all），则判断该行数据的日期是否在选中列表内
+    if (f.dates && !f.dates.includes('all') && keyMap.bDate && !f.dates.includes(r[keyMap.bDate])) return false;
+    
     if (f.dur !== 'all' && keyMap.dur && r[keyMap.dur] !== f.dur) return false;
     if (f.carrier !== 'all' && keyMap.carrier && r[keyMap.carrier] !== f.carrier) return false;
     if (f.promo !== 'all') { const v = f.promo === 'null' ? null : f.promo; if (keyMap.promo && r[keyMap.promo] !== v) return false; }
@@ -208,11 +238,11 @@ function render() {
   const { meta, v1, v2, v3, v4, v5 } = parseSections(allRows);
   const f = getFilters();
 
-  const fv1 = applyFilters(v1, { date:'date', dur:'dur', promo:'promo' }, f);
-  const fv2 = applyFilters(v2, { dur:'dur', carrier:'carrier', promo:'promo' }, f);
-  const fv3 = applyFilters(v3, { dur:'dur', promo:'promo' }, f);
-  const fv4 = applyFilters(v4, { promo:'promo' }, f);
-  const fv5 = applyFilters(v5, { date:'date', carrier:'carrier', promo:'promo' }, f);
+  const fv1 = applyFilters(v1, { bDate:'bDate', date:'date', dur:'dur', promo:'promo' }, f);
+  const fv2 = applyFilters(v2, { bDate:'bDate', dur:'dur', carrier:'carrier', promo:'promo' }, f);
+  const fv3 = applyFilters(v3, { bDate:'bDate', dur:'dur', promo:'promo' }, f);
+  const fv4 = applyFilters(v4, { bDate:'bDate', promo:'promo' }, f);
+  const fv5 = applyFilters(v5, { bDate:'bDate', date:'date', carrier:'carrier', promo:'promo' }, f);
 
   document.getElementById('lastUpdated').textContent = 'data for: ' + (meta.pipeline_run_date || '—');
   document.getElementById('runBadge').textContent = 'run: ' + (meta.pipeline_run_date || '—');
@@ -226,7 +256,7 @@ function render() {
     <div class="metric" style="--accent-c:var(--accent3)"><p class="metric-label">freemeal ssrs</p><p class="metric-value">${freemealN.toLocaleString()}</p><p class="metric-sub">promo eligible</p></div>
   `;
 
-  // Chart 1
+  // Chart 1 (X轴依然展示出发日期 Departure Date，这是运营看板的通用标准)
   const dates = [...new Set(fv1.map(r=>r.date))].sort();
   rebuildChart('c1', 'bar', { labels: dates, datasets: [{ label:'< 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='< 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 }, { label:'>= 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='>= 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#f87a7a', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg1').innerHTML = legend([['#D0021B','< 75 mins'],['#f87a7a','>= 75 mins']]);
