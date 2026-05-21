@@ -21,15 +21,15 @@
     --muted:     #6b7280;
     --mono:      'IBM Plex Mono', monospace;
     --sans:      'IBM Plex Sans', sans-serif;
-    --ctrl-h:    34px;   /* single source of truth for all control heights */
+    --ctrl-h:    34px;
   }
   html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
   .shell { max-width: 1280px; margin: 0 auto; padding: 0 24px 64px; }
 
   /* ── Header ── */
   header { padding: 24px 0 20px; border-bottom: 2px solid var(--accent); display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-  .header-logo { background: #D0021B; color: #ffffff !important; font-family: var(--sans); font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 4px; margin-right: 10px; letter-spacing: .02em; display: inline-block; }
-  .header-left h1 { font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); display: flex; align-items: center; }
+  .header-logo { background: #D0021B; color: #fff !important; font-family: var(--sans); font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 4px; margin-right: 10px; letter-spacing: .02em; display: inline-block; }
+  .header-left h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; }
   .header-left h1 span { color: var(--accent); }
   .header-left p { font-size: 12px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
   .header-right { display: flex; align-items: center; gap: 10px; }
@@ -37,20 +37,9 @@
   .badge.live { border-color: var(--accent); color: var(--accent); background: #fff0f0; }
 
   /* ── Controls ── */
-  .controls {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 24px;
-    align-items: flex-end;   /* all children bottom-align so label+control stacks line up */
-  }
-  /* Each control column: label on top, input on bottom */
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; align-items: flex-end; }
   .ctrl-col { display: flex; flex-direction: column; gap: 4px; }
   .ctrl-col > label { font-size: 11px; color: var(--muted); font-family: var(--mono); white-space: nowrap; }
-
-  /* Shared height + appearance for ALL inputs (native selects + custom trigger) */
   .ctrl-input {
     height: var(--ctrl-h);
     background: var(--surface);
@@ -72,80 +61,45 @@
     transition: border-color .15s;
   }
   .ctrl-input:hover { border-color: var(--accent); }
-  /* native <select> inherits all of the above */
   select.ctrl-input { width: 100%; }
 
-  /* ── Custom multi-select dropdown ── */
+  /* ── Custom multi-select ── */
   .custom-select { position: relative; min-width: 170px; }
-  /* the visible trigger button — reuses .ctrl-input */
   .select-trigger { width: 100%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* dropdown panel */
   .select-items {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 12px rgba(0,0,0,.10);
-    border-radius: 6px;
-    z-index: 99;
-    max-height: 300px;
-    overflow-y: auto;
-    width: max-content;
-    min-width: 100%;
+    position: absolute; top: calc(100% + 4px); left: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,.10); border-radius: 6px;
+    z-index: 99; max-height: 300px; overflow-y: auto;
+    width: max-content; min-width: 100%;
   }
   .select-items.hidden { display: none; }
-  .select-items label {
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-weight: normal;
-    margin-bottom: 0;
-    transition: background .1s;
-  }
+  .select-items label { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--text); font-family: var(--sans); font-weight: normal; margin-bottom: 0; transition: background .1s; }
   .select-items label:hover { background: var(--surface2); }
   .select-items input[type="checkbox"] { margin-right: 10px; accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; flex-shrink: 0; }
   .select-all-row { border-bottom: 1px solid var(--border); font-weight: 600 !important; background: #fafafa; }
 
-  /* ── Refresh button — same height as controls ── */
-  .btn-refresh {
-    height: var(--ctrl-h);
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 500;
-    padding: 0 18px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background .15s;
-    align-self: flex-end;   /* sit at the bottom like the inputs */
-    white-space: nowrap;
-  }
+  /* ── Refresh button ── */
+  .btn-refresh { height: var(--ctrl-h); background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 0 18px; border-radius: 6px; cursor: pointer; transition: background .15s; align-self: flex-end; white-space: nowrap; }
   .btn-refresh:hover { background: #b0011a; }
 
-  /* ── Metric cards ── */
+  /* ── Metrics ── */
   .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; position: relative; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
   .metric::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent-c, var(--accent)); }
   .metric-label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
-  .metric-value { font-size: 26px; font-weight: 600; color: var(--text); }
+  .metric-value { font-size: 26px; font-weight: 600; }
   .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-  /* ── Chart panels ── */
-  .panel-title { font-family: var(--sans); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  /* ── Panels ── */
+  .panel-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
   .panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .grid-1 { margin-bottom: 16px; }
   @media (max-width: 780px) { .grid-2 { grid-template-columns: 1fr; } }
   .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
   .chart-wrap { position: relative; width: 100%; }
-  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 11px; color: var(--muted); font-family: var(--sans); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 11px; color: var(--muted); }
   .legend span { display: flex; align-items: center; gap: 5px; }
   .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
@@ -154,12 +108,15 @@
   #loader.hidden { opacity: 0; pointer-events: none; }
   .spinner { width: 32px; height: 32px; border: 2px solid #eee; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .error-box { background: #fff0f0; border: 1px solid #fca5a5; color: var(--accent); border-radius: 8px; padding: 16px 20px; font-family: var(--sans); font-size: 13px; margin-bottom: 24px; display: none; }
+  .error-box { background: #fff0f0; border: 1px solid #fca5a5; color: var(--accent); border-radius: 8px; padding: 16px 20px; font-size: 13px; margin-bottom: 24px; display: none; }
 </style>
 </head>
 <body>
 
-<div id="loader"><div class="spinner"></div><p style="font-size:13px;color:#6b7280;font-family:'IBM Plex Sans'">loading data from secure API…</p></div>
+<div id="loader">
+  <div class="spinner"></div>
+  <p style="font-size:13px;color:#6b7280;font-family:'IBM Plex Sans'">loading data from secure API…</p>
+</div>
 
 <div class="shell">
   <header>
@@ -167,12 +124,13 @@
       <h1><span class="header-logo">AirAsia</span> Free Meal <span>Dashboard</span></h1>
       <p id="lastUpdated">—</p>
     </div>
-    <div class="header-right"><span class="badge live">● live</span><span class="badge" id="runBadge">—</span></div>
+    <div class="header-right">
+      <span class="badge live">● live</span>
+      <span class="badge" id="runBadge">—</span>
+    </div>
   </header>
 
   <div class="controls">
-
-    <!-- Booking Creation Date — custom multi-select -->
     <div class="ctrl-col">
       <label>Booking Creation Date</label>
       <div class="custom-select" id="dateFilterWrapper">
@@ -180,8 +138,6 @@
         <div class="select-items hidden" id="dateDropdownItems"></div>
       </div>
     </div>
-
-    <!-- Duration -->
     <div class="ctrl-col">
       <label>Duration</label>
       <select id="fDur" class="ctrl-input" onchange="render()">
@@ -190,16 +146,12 @@
         <option value=">= 75 mins">&gt;= 75 mins</option>
       </select>
     </div>
-
-    <!-- Carrier -->
     <div class="ctrl-col">
       <label>Carrier</label>
       <select id="fCarrier" class="ctrl-input" onchange="render()">
         <option value="all">All carriers</option>
       </select>
     </div>
-
-    <!-- Promo -->
     <div class="ctrl-col">
       <label>Promo</label>
       <select id="fPromo" class="ctrl-input" onchange="render()">
@@ -208,7 +160,6 @@
         <option value="null">Paid meals only</option>
       </select>
     </div>
-
     <button class="btn-refresh" onclick="loadData()">↺ Refresh</button>
   </div>
 
@@ -216,33 +167,45 @@
   <div class="metrics" id="metrics"></div>
 
   <div class="grid-2">
-    <div class="panel"><p class="panel-title">01 — SSR count by date &amp; duration</p><div class="legend" id="leg1"></div><div class="chart-wrap" style="height:220px"><canvas id="c1"></canvas></div></div>
-    <div class="panel"><p class="panel-title">02 — SSR count by carrier</p><div class="legend" id="leg2"></div><div class="chart-wrap" style="height:220px"><canvas id="c2"></canvas></div></div>
+    <div class="panel">
+      <p class="panel-title">01 — SSR count by departure date &amp; duration</p>
+      <div class="legend" id="leg1"></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="panel">
+      <p class="panel-title">02 — SSR count by carrier</p>
+      <div class="legend" id="leg2"></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c2"></canvas></div>
+    </div>
   </div>
+
   <div class="grid-1 panel" style="margin-bottom:16px">
     <p class="panel-title">03 — Top sectors by SSR count</p>
     <div class="chart-wrap" id="c3wrap" style="height:280px"><canvas id="c3"></canvas></div>
   </div>
+
   <div class="grid-1 panel" style="margin-bottom:16px">
     <p class="panel-title">04 — FREEMEAL vs paid meal split</p>
     <div class="legend" id="leg4"></div>
     <div class="chart-wrap" style="height:220px"><canvas id="c4"></canvas></div>
   </div>
+
   <div class="grid-1 panel">
-    <p class="panel-title">05 — Top Flights by SSR Count &amp; Date</p>
+    <p class="panel-title">05 — Top flights by SSR count</p>
     <div class="chart-wrap" id="c5wrap" style="height:300px"><canvas id="c5"></canvas></div>
   </div>
 </div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────
+// ── CONFIG ────────────────────────────────────────────────────
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzTOtU7s-oBkqCbfOff43tHHf3XzCyWqYVG4yfP1FRaJ8GUQRZ9Dk-FBwmD0buxU3NgSA/exec';
-// ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 let allRows = [];
 const charts = {};
 let dateFilterState = ['all'];
 
+// ── Load ─────────────────────────────────────────────────────
 async function loadData() {
   document.getElementById('loader').classList.remove('hidden');
   document.getElementById('errorBox').style.display = 'none';
@@ -253,41 +216,38 @@ async function loadData() {
     populateFilters();
     render();
   } catch(e) {
-    document.getElementById('errorBox').innerHTML = 'Could not load data. Make sure the API is running correctly.<br><br>Error: ' + e.message;
+    document.getElementById('errorBox').innerHTML =
+      'Could not load data. Make sure the API is deployed correctly.<br><br>Error: ' + e.message;
     document.getElementById('errorBox').style.display = 'block';
   } finally {
     document.getElementById('loader').classList.add('hidden');
   }
 }
 
-// ============================================================
-// parseSections — NEW FLAT APPEND SCHEMA
-// Sheet columns (0-indexed):
-//   0  pipeline_run_label
-//   1  view_name            (view1 … view5)
-//   2  booking_date
-//   3  departure_date
-//   4  carrier_code
-//   5  flight_number
-//   6  sector               ("KUL-SIN")
-//   7  departure_station
-//   8  arrival_station
-//   9  flight_type
-//   10 flight_duration_category
-//   11 booking_promo_code
-//   12 ssr_code
-//   13 ssr_count
-//   14 unique_pax
-// First row is the header — skip it.
-// ============================================================
+// ── Parse ─────────────────────────────────────────────────────
+// Summary column indices:
+//  [0]  pipeline_run_label
+//  [1]  view_name
+//  [2]  booking_date
+//  [3]  departure_date
+//  [4]  carrier_code
+//  [5]  flight_number
+//  [6]  sector
+//  [7]  departure_station
+//  [8]  arrival_station
+//  [9]  flight_type
+//  [10] flight_duration_category
+//  [11] booking_promo_code
+//  [12] ssr_code
+//  [13] ssr_count
+//  [14] unique_pax
+//  [15] flight_duration_mins
 function parseSections(raw) {
   const v1 = [], v2 = [], v3 = [], v4 = [], v5 = [];
-  // Collect all distinct pipeline_run_label values for the meta badge
   const pipelineDates = new Set();
 
   raw.forEach((row, idx) => {
-    // Skip the header row
-    if (idx === 0) return;
+    if (idx === 0) return; // skip header
 
     const pLabel  = String(row[0]  || '').trim();
     const view    = String(row[1]  || '').trim();
@@ -300,10 +260,11 @@ function parseSections(raw) {
     const arr     = String(row[8]  || '').trim() || null;
     const ftype   = String(row[9]  || '').trim() || null;
     const dur     = String(row[10] || '').trim() || null;
-    const promo   = row[11] === '' || row[11] == null ? null : String(row[11]).trim();
+    const promo   = (row[11] === '' || row[11] == null) ? null : String(row[11]).trim();
     const ssrCode = String(row[12] || '').trim() || null;
     const ssrCnt  = +row[13] || 0;
     const uniqPax = +row[14] || 0;
+    const durMins = +row[15] || null;  // flight_duration_mins
 
     if (pLabel) pipelineDates.add(pLabel);
 
@@ -311,10 +272,9 @@ function parseSections(raw) {
     if (view === 'view2') v2.push({ pLabel, bDate, carrier, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax });
     if (view === 'view3') v3.push({ pLabel, bDate, sector, dep, arr, flight_type: ftype, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax });
     if (view === 'view4') v4.push({ pLabel, bDate, promo, flight_type: ftype, ssr_code: ssrCode, ssr_count: ssrCnt, unique_pax: uniqPax });
-    if (view === 'view5') v5.push({ pLabel, bDate, dDate, carrier, flight, sector, dep, arr, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax });
+    if (view === 'view5') v5.push({ pLabel, bDate, dDate, carrier, flight, sector, dep, arr, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax, dur_mins: durMins });
   });
 
-  // Derive meta from accumulated data (no longer a separate section in the sheet)
   const meta = {
     pipeline_run_date : [...pipelineDates].sort().at(-1) || '—',
     total_ssr_count   : v1.reduce((a, r) => a + r.ssr_count, 0),
@@ -325,7 +285,7 @@ function parseSections(raw) {
   return { meta, v1, v2, v3, v4, v5 };
 }
 
-// ── Custom multi-select dropdown ──────────────────────────
+// ── Custom multi-select ───────────────────────────────────────
 function toggleDateDropdown() {
   document.getElementById('dateDropdownItems').classList.toggle('hidden');
 }
@@ -353,10 +313,10 @@ function handleDateChange(type) {
   render();
 }
 function updateDateHeader() {
-  const header   = document.getElementById('dateSelectHeader');
-  const cbItems  = document.querySelectorAll('.cb-date');
-  const total    = cbItems.length;
-  const checked  = Array.from(cbItems).filter(cb => cb.checked).length;
+  const header  = document.getElementById('dateSelectHeader');
+  const cbItems = document.querySelectorAll('.cb-date');
+  const total   = cbItems.length;
+  const checked = Array.from(cbItems).filter(cb => cb.checked).length;
   if (checked === 0) {
     header.textContent = '0 selected';
     header.style.color = 'var(--muted)';
@@ -372,11 +332,10 @@ function updateDateHeader() {
   }
 }
 
-// ── Populate filter dropdowns ─────────────────────────────
+// ── Populate filters ──────────────────────────────────────────
 function populateFilters() {
   const { v1, v2 } = parseSections(allRows);
 
-  // Booking dates — from v1
   const bDates = [...new Set(v1.map(r => r.bDate).filter(Boolean))].sort();
   let html = `<label class="select-all-row"><input type="checkbox" id="cb_all" checked onchange="handleDateChange('all')"> Select All</label>`;
   bDates.forEach(d => {
@@ -386,14 +345,13 @@ function populateFilters() {
   dateFilterState = ['all'];
   updateDateHeader();
 
-  // Carriers — from v2
   const carriers = [...new Set(v2.map(r => r.carrier).filter(Boolean))].sort();
   document.getElementById('fCarrier').innerHTML =
     '<option value="all">All carriers</option>' +
     carriers.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
-// ── Filters ───────────────────────────────────────────────
+// ── Filters ───────────────────────────────────────────────────
 function getFilters() {
   return {
     dates   : dateFilterState.length === 0 ? ['none'] : dateFilterState,
@@ -402,21 +360,15 @@ function getFilters() {
     promo   : document.getElementById('fPromo').value
   };
 }
-
-// keyMap: maps filter keys to the field name on each row object
 function applyFilters(arr, keyMap, f) {
   return arr.filter(r => {
-    // date filter
     if (f.dates && !f.dates.includes('all')) {
       if (f.dates.includes('none')) return false;
       const fieldVal = keyMap.bDate ? r[keyMap.bDate] : null;
       if (fieldVal && !f.dates.includes(fieldVal)) return false;
     }
-    // duration filter
     if (f.dur !== 'all' && keyMap.dur && r[keyMap.dur] !== f.dur) return false;
-    // carrier filter
     if (f.carrier !== 'all' && keyMap.carrier && r[keyMap.carrier] !== f.carrier) return false;
-    // promo filter
     if (f.promo !== 'all') {
       const want = f.promo === 'null' ? null : f.promo;
       if (keyMap.promo) {
@@ -428,7 +380,7 @@ function applyFilters(arr, keyMap, f) {
   });
 }
 
-// ── Render ────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────
 function render() {
   if (!allRows.length) return;
   const { meta, v1, v2, v3, v4, v5 } = parseSections(allRows);
@@ -440,24 +392,40 @@ function render() {
   const fv4 = applyFilters(v4, { bDate:'bDate', promo:'promo' }, f);
   const fv5 = applyFilters(v5, { bDate:'bDate', dur:'dur', carrier:'carrier', promo:'promo' }, f);
 
-  // Header badges
+  // Header
   document.getElementById('lastUpdated').textContent = 'latest run: ' + meta.pipeline_run_date;
   document.getElementById('runBadge').textContent    = 'run: ' + meta.pipeline_run_date;
 
-  // Metric cards — computed from filtered data
+  // Metric cards
   const totalSSR  = fv1.reduce((a, r) => a + r.ssr_count, 0);
   const freemealN = fv1.filter(r => r.promo === 'FREEMEAL').reduce((a, r) => a + r.ssr_count, 0);
   const uFlights  = new Set(fv5.map(r => `${r.carrier}${r.flight}${r.dDate}`)).size;
   const uSectors  = new Set(fv3.map(r => r.sector).filter(Boolean)).size;
 
   document.getElementById('metrics').innerHTML = `
-    <div class="metric" style="--accent-c:var(--accent)"><p class="metric-label">total ssr count</p><p class="metric-value">${totalSSR.toLocaleString()}</p><p class="metric-sub">meal ssrs in view</p></div>
-    <div class="metric" style="--accent-c:var(--accent2)"><p class="metric-label">unique flights</p><p class="metric-value">${uFlights.toLocaleString()}</p><p class="metric-sub">in filtered view</p></div>
-    <div class="metric" style="--accent-c:var(--accent4)"><p class="metric-label">unique sectors</p><p class="metric-value">${uSectors.toLocaleString()}</p><p class="metric-sub">routes covered</p></div>
-    <div class="metric" style="--accent-c:var(--accent3)"><p class="metric-label">freemeal ssrs</p><p class="metric-value">${freemealN.toLocaleString()}</p><p class="metric-sub">promo eligible</p></div>
+    <div class="metric" style="--accent-c:var(--accent)">
+      <p class="metric-label">total ssr count</p>
+      <p class="metric-value">${totalSSR.toLocaleString()}</p>
+      <p class="metric-sub">meal ssrs in view</p>
+    </div>
+    <div class="metric" style="--accent-c:var(--accent2)">
+      <p class="metric-label">unique flights</p>
+      <p class="metric-value">${uFlights.toLocaleString()}</p>
+      <p class="metric-sub">in filtered view</p>
+    </div>
+    <div class="metric" style="--accent-c:var(--accent4)">
+      <p class="metric-label">unique sectors</p>
+      <p class="metric-value">${uSectors.toLocaleString()}</p>
+      <p class="metric-sub">routes covered</p>
+    </div>
+    <div class="metric" style="--accent-c:var(--accent3)">
+      <p class="metric-label">freemeal ssrs</p>
+      <p class="metric-value">${freemealN.toLocaleString()}</p>
+      <p class="metric-sub">promo eligible</p>
+    </div>
   `;
 
-  // Chart 1 — SSR by departure date & duration
+  // Chart 1 — SSR by departure date & duration category
   const dDates = [...new Set(fv1.map(r => r.dDate).filter(Boolean))].sort();
   rebuildChart('c1', 'bar', {
     labels: dDates,
@@ -478,7 +446,7 @@ function render() {
 
   // Chart 3 — Top sectors
   const sMap = {};
-  fv3.forEach(r => { sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
+  fv3.forEach(r => { if (r.sector) sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
   const sortedS = Object.entries(sMap).sort((a,b)=>b[1]-a[1]).slice(0,14);
   document.getElementById('c3wrap').style.height = Math.max(220, sortedS.length * 32 + 60) + 'px';
   rebuildChart('c3', 'bar', {
@@ -486,31 +454,45 @@ function render() {
     datasets: [{ data: sortedS.map(s=>s[1]), backgroundColor:'#D0021B', borderRadius:3 }]
   }, { indexAxis:'y', scales:{ x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}}, y:{grid:{color:'rgba(0,0,0,.06)'}} }});
 
-  // Chart 4 — FREEMEAL vs paid split
+  // Chart 4 — FREEMEAL vs paid split by flight type
   const ftypes = [...new Set(fv4.map(r=>r.flight_type).filter(Boolean))].sort();
   rebuildChart('c4', 'bar', {
     labels: ftypes,
     datasets: [
-      { label:'FREEMEAL',  data: ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0)),                         backgroundColor:'#D0021B', borderRadius:3 },
+      { label:'FREEMEAL',  data: ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 },
       { label:'Paid meal', data: ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&(r.promo===null||r.promo==='')).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#1a7a3f', borderRadius:3 }
     ]
   }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg4').innerHTML = legend([['#D0021B','FREEMEAL'],['#1a7a3f','Paid meal']]);
 
   // Chart 5 — Top flights
+  // Label format: "FD3522  |  DMK-BFV  |  2026-06-06  |  185m"
   const fltMap = {};
   fv5.forEach(r => {
-    const key = `${r.carrier}${r.flight} (${r.dDate})`;
+    const durLabel = r.dur_mins ? `${r.dur_mins}m` : '';
+    const key = [
+      `${r.carrier || ''}${r.flight || ''}`,
+      r.sector || '',
+      r.dDate  || '',
+      durLabel
+    ].filter(Boolean).join('  |  ');
     fltMap[key] = (fltMap[key]||0) + r.ssr_count;
   });
   const sortedF = Object.entries(fltMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  document.getElementById('c5wrap').style.height = Math.max(220, sortedF.length * 32 + 60) + 'px';
+  document.getElementById('c5wrap').style.height = Math.max(220, sortedF.length * 36 + 60) + 'px';
   rebuildChart('c5', 'bar', {
     labels: sortedF.map(s=>s[0]),
     datasets: [{ data: sortedF.map(s=>s[1]), backgroundColor:'#1a1a1a', borderRadius:3 }]
-  }, { indexAxis:'y', scales:{ x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}}, y:{ticks:{color:'#6b7280',font:{size:11}},grid:{color:'rgba(0,0,0,.06)'}} }});
+  }, {
+    indexAxis: 'y',
+    scales: {
+      x: { beginAtZero:true, grid:{ color:'rgba(0,0,0,.06)' } },
+      y: { ticks:{ color:'#6b7280', font:{ size:11 }, autoSkip:false }, grid:{ color:'rgba(0,0,0,.06)' } }
+    }
+  });
 }
 
+// ── Helpers ───────────────────────────────────────────────────
 function rebuildChart(id, type, data, options) {
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart(document.getElementById(id), {
