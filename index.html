@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  /* ── Reset & Base ────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg:        #f5f6f8;
@@ -22,11 +21,12 @@
     --muted:     #6b7280;
     --mono:      'IBM Plex Mono', monospace;
     --sans:      'IBM Plex Sans', sans-serif;
+    --ctrl-h:    34px;   /* single source of truth for all control heights */
   }
   html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
   .shell { max-width: 1280px; margin: 0 auto; padding: 0 24px 64px; }
 
-  /* ── Header ──────────────────────────────── */
+  /* ── Header ── */
   header { padding: 24px 0 20px; border-bottom: 2px solid var(--accent); display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
   .header-logo { background: #D0021B; color: #ffffff !important; font-family: var(--sans); font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 4px; margin-right: 10px; letter-spacing: .02em; display: inline-block; }
   .header-left h1 { font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); display: flex; align-items: center; }
@@ -36,27 +36,100 @@
   .badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); background: var(--surface); }
   .badge.live { border-color: var(--accent); color: var(--accent); background: #fff0f0; }
 
-  /* ── Controls (包含复选框下拉菜单的样式) ── */
-  .controls { display: flex; gap: 12px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; align-items: flex-end; }
-  .controls > div > label { font-size: 11px; color: var(--muted); font-family: var(--mono); display: block; margin-bottom: 4px; }
-  .controls select { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 6px; cursor: pointer; min-width: 140px; box-shadow: 0 1px 2px rgba(0,0,0,.06); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
-  .controls select:hover { border-color: var(--accent); }
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    align-items: flex-end;   /* all children bottom-align so label+control stacks line up */
+  }
+  /* Each control column: label on top, input on bottom */
+  .ctrl-col { display: flex; flex-direction: column; gap: 4px; }
+  .ctrl-col > label { font-size: 11px; color: var(--muted); font-family: var(--mono); white-space: nowrap; }
 
-  /* 定制带 Checkbox 的下拉菜单 CSS */
-  .custom-select { position: relative; display: inline-block; min-width: 170px; }
-  .select-selected { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 6px; cursor: pointer; user-select: none; box-shadow: 0 1px 2px rgba(0,0,0,.06); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.15s; }
-  .select-selected:hover { border-color: var(--accent); }
-  .select-items { position: absolute; background-color: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 6px; margin-top: 4px; z-index: 99; max-height: 300px; overflow-y: auto; width: max-content; min-width: 100%; }
+  /* Shared height + appearance for ALL inputs (native selects + custom trigger) */
+  .ctrl-input {
+    height: var(--ctrl-h);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 0 28px 0 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    min-width: 140px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    display: flex;
+    align-items: center;
+    transition: border-color .15s;
+  }
+  .ctrl-input:hover { border-color: var(--accent); }
+  /* native <select> inherits all of the above */
+  select.ctrl-input { width: 100%; }
+
+  /* ── Custom multi-select dropdown ── */
+  .custom-select { position: relative; min-width: 170px; }
+  /* the visible trigger button — reuses .ctrl-input */
+  .select-trigger { width: 100%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* dropdown panel */
+  .select-items {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,.10);
+    border-radius: 6px;
+    z-index: 99;
+    max-height: 300px;
+    overflow-y: auto;
+    width: max-content;
+    min-width: 100%;
+  }
   .select-items.hidden { display: none; }
-  .select-items label { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--text); font-family: var(--sans); font-weight: normal; margin-bottom: 0; transition: background 0.1s; }
-  .select-items label:hover { background-color: var(--surface2); }
-  .select-items input[type="checkbox"] { margin-right: 10px; accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; }
-  .select-all-row { border-bottom: 1px solid var(--border); font-weight: 600 !important; background-color: #fafafa; }
-  
-  .btn-refresh { background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 6px 18px; border-radius: 6px; cursor: pointer; align-self: stretch; transition: background .15s; margin-bottom: 0px; height: 33px;}
+  .select-items label {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: normal;
+    margin-bottom: 0;
+    transition: background .1s;
+  }
+  .select-items label:hover { background: var(--surface2); }
+  .select-items input[type="checkbox"] { margin-right: 10px; accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; flex-shrink: 0; }
+  .select-all-row { border-bottom: 1px solid var(--border); font-weight: 600 !important; background: #fafafa; }
+
+  /* ── Refresh button — same height as controls ── */
+  .btn-refresh {
+    height: var(--ctrl-h);
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s;
+    align-self: flex-end;   /* sit at the bottom like the inputs */
+    white-space: nowrap;
+  }
   .btn-refresh:hover { background: #b0011a; }
 
-  /* ── Metric cards ────────────────────────── */
+  /* ── Metric cards ── */
   .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; position: relative; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
   .metric::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent-c, var(--accent)); }
@@ -64,7 +137,7 @@
   .metric-value { font-size: 26px; font-weight: 600; color: var(--text); }
   .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-  /* ── Chart panels ────────────────────────── */
+  /* ── Chart panels ── */
   .panel-title { font-family: var(--sans); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
   .panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -76,7 +149,7 @@
   .legend span { display: flex; align-items: center; gap: 5px; }
   .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-  /* ── Loader ─────────────────────────────── */
+  /* ── Loader ── */
   #loader { position: fixed; inset: 0; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 16px; transition: opacity .4s; }
   #loader.hidden { opacity: 0; pointer-events: none; }
   .spinner { width: 32px; height: 32px; border: 2px solid #eee; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
@@ -98,28 +171,44 @@
   </header>
 
   <div class="controls">
-    
-    <div>
+
+    <!-- Booking Creation Date — custom multi-select -->
+    <div class="ctrl-col">
       <label>Booking Creation Date</label>
       <div class="custom-select" id="dateFilterWrapper">
-        <div class="select-selected" id="dateSelectHeader" onclick="toggleDateDropdown()">All dates</div>
-        <div class="select-items hidden" id="dateDropdownItems">
-          </div>
+        <div class="ctrl-input select-trigger" id="dateSelectHeader" onclick="toggleDateDropdown()">All dates</div>
+        <div class="select-items hidden" id="dateDropdownItems"></div>
       </div>
     </div>
 
-    <div>
+    <!-- Duration -->
+    <div class="ctrl-col">
       <label>Duration</label>
-      <select id="fDur" onchange="render()"><option value="all">All durations</option><option value="< 75 mins">< 75 mins</option><option value=">= 75 mins">>= 75 mins</option></select>
+      <select id="fDur" class="ctrl-input" onchange="render()">
+        <option value="all">All durations</option>
+        <option value="< 75 mins">&lt; 75 mins</option>
+        <option value=">= 75 mins">&gt;= 75 mins</option>
+      </select>
     </div>
-    <div>
+
+    <!-- Carrier -->
+    <div class="ctrl-col">
       <label>Carrier</label>
-      <select id="fCarrier" onchange="render()"><option value="all">All carriers</option></select>
+      <select id="fCarrier" class="ctrl-input" onchange="render()">
+        <option value="all">All carriers</option>
+      </select>
     </div>
-    <div>
+
+    <!-- Promo -->
+    <div class="ctrl-col">
       <label>Promo</label>
-      <select id="fPromo" onchange="render()"><option value="all">All</option><option value="FREEMEAL">FREEMEAL only</option><option value="null">Paid meals only</option></select>
+      <select id="fPromo" class="ctrl-input" onchange="render()">
+        <option value="all">All</option>
+        <option value="FREEMEAL">FREEMEAL only</option>
+        <option value="null">Paid meals only</option>
+      </select>
     </div>
+
     <button class="btn-refresh" onclick="loadData()">↺ Refresh</button>
   </div>
 
@@ -130,33 +219,29 @@
     <div class="panel"><p class="panel-title">01 — SSR count by date &amp; duration</p><div class="legend" id="leg1"></div><div class="chart-wrap" style="height:220px"><canvas id="c1"></canvas></div></div>
     <div class="panel"><p class="panel-title">02 — SSR count by carrier</p><div class="legend" id="leg2"></div><div class="chart-wrap" style="height:220px"><canvas id="c2"></canvas></div></div>
   </div>
-
   <div class="grid-1 panel" style="margin-bottom:16px">
     <p class="panel-title">03 — Top sectors by SSR count</p>
     <div class="chart-wrap" id="c3wrap" style="height:280px"><canvas id="c3"></canvas></div>
   </div>
-
   <div class="grid-1 panel" style="margin-bottom:16px">
     <p class="panel-title">04 — FREEMEAL vs paid meal split</p>
     <div class="legend" id="leg4"></div>
     <div class="chart-wrap" style="height:220px"><canvas id="c4"></canvas></div>
   </div>
-
   <div class="grid-1 panel">
     <p class="panel-title">05 — Top Flights by SSR Count &amp; Date</p>
     <div class="chart-wrap" id="c5wrap" style="height:300px"><canvas id="c5"></canvas></div>
   </div>
-
 </div>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzTOtU7s-oBkqCbfOff43tHHf3XzCyWqYVG4yfP1FRaJ8GUQRZ9Dk-FBwmD0buxU3NgSA/exec';
-// ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────
 
 let allRows = [];
 const charts = {};
-let dateFilterState = ['all']; // 记录选中的日期数组
+let dateFilterState = ['all'];
 
 async function loadData() {
   document.getElementById('loader').classList.remove('hidden');
@@ -164,7 +249,7 @@ async function loadData() {
   try {
     const res = await fetch(WEB_APP_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    allRows = await res.json(); 
+    allRows = await res.json();
     populateFilters();
     render();
   } catch(e) {
@@ -175,203 +260,269 @@ async function loadData() {
   }
 }
 
+// ============================================================
+// parseSections — NEW FLAT APPEND SCHEMA
+// Sheet columns (0-indexed):
+//   0  pipeline_run_label
+//   1  view_name            (view1 … view5)
+//   2  booking_date
+//   3  departure_date
+//   4  carrier_code
+//   5  flight_number
+//   6  sector               ("KUL-SIN")
+//   7  departure_station
+//   8  arrival_station
+//   9  flight_type
+//   10 flight_duration_category
+//   11 booking_promo_code
+//   12 ssr_code
+//   13 ssr_count
+//   14 unique_pax
+// First row is the header — skip it.
+// ============================================================
 function parseSections(raw) {
-  const meta = {};
   const v1 = [], v2 = [], v3 = [], v4 = [], v5 = [];
-  let section = null;
+  // Collect all distinct pipeline_run_label values for the meta badge
+  const pipelineDates = new Set();
 
-  raw.forEach(row => {
-    const first = String(row[0] || '').trim();
-    if (!first) { section = null; return; }
+  raw.forEach((row, idx) => {
+    // Skip the header row
+    if (idx === 0) return;
 
-    if (first === 'pipeline_run_date') { meta.pipeline_run_date = row[1]; return; }
-    if (first === 'total_ssr_count')   { meta.total_ssr_count   = row[1]; return; }
-    if (first === 'unique_flights')    { meta.unique_flights    = row[1]; return; }
-    if (first === 'unique_sectors')    { meta.unique_sectors    = row[1]; return; }
+    const pLabel  = String(row[0]  || '').trim();
+    const view    = String(row[1]  || '').trim();
+    const bDate   = String(row[2]  || '').slice(0, 10) || null;
+    const dDate   = String(row[3]  || '').slice(0, 10) || null;
+    const carrier = String(row[4]  || '').trim() || null;
+    const flight  = String(row[5]  || '').trim() || null;
+    const sector  = String(row[6]  || '').trim() || null;
+    const dep     = String(row[7]  || '').trim() || null;
+    const arr     = String(row[8]  || '').trim() || null;
+    const ftype   = String(row[9]  || '').trim() || null;
+    const dur     = String(row[10] || '').trim() || null;
+    const promo   = row[11] === '' || row[11] == null ? null : String(row[11]).trim();
+    const ssrCode = String(row[12] || '').trim() || null;
+    const ssrCnt  = +row[13] || 0;
+    const uniqPax = +row[14] || 0;
 
-    if (first === '[view1] by_date_duration') { section = 'v1'; return; }
-    if (first === '[view2] by_carrier')       { section = 'v2'; return; }
-    if (first === '[view3] by_sector')        { section = 'v3'; return; }
-    if (first === '[view4] by_promo')         { section = 'v4'; return; }
-    if (first === '[view5] by_flight')        { section = 'v5'; return; }
+    if (pLabel) pipelineDates.add(pLabel);
 
-    if (first === 'booking_date' || first === 'departure_date' || first === 'carrier_code' || first === 'sector' || first === 'booking_promo_code') return;
-
-    const toDate = v => v ? String(v).slice(0, 10) : null;
-
-    if (section === 'v1') v1.push({ bDate: toDate(row[0]), date: toDate(row[1]), dur: row[2], promo: row[3], ssr_count: +row[4]||0 });
-    if (section === 'v2') v2.push({ bDate: toDate(row[0]), carrier: row[1], dur: row[2], promo: row[3], ssr_count: +row[4]||0 });
-    if (section === 'v3') v3.push({ bDate: toDate(row[0]), sector: row[1], flight_type: row[4], dur: row[5], promo: row[6], ssr_count: +row[7]||0 });
-    if (section === 'v4') v4.push({ bDate: toDate(row[0]), promo: row[1], flight_type: row[2], ssr_code: row[3], ssr_count: +row[4]||0 });
-    if (section === 'v5') v5.push({ bDate: toDate(row[0]), date: toDate(row[1]), carrier: row[2], flight: row[3], promo: row[4], ssr_count: +row[5]||0 });
+    if (view === 'view1') v1.push({ pLabel, bDate, dDate, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax });
+    if (view === 'view2') v2.push({ pLabel, bDate, carrier, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax });
+    if (view === 'view3') v3.push({ pLabel, bDate, sector, dep, arr, flight_type: ftype, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax });
+    if (view === 'view4') v4.push({ pLabel, bDate, promo, flight_type: ftype, ssr_code: ssrCode, ssr_count: ssrCnt, unique_pax: uniqPax });
+    if (view === 'view5') v5.push({ pLabel, bDate, dDate, carrier, flight, sector, dep, arr, dur, promo, ssr_count: ssrCnt, unique_pax: uniqPax });
   });
+
+  // Derive meta from accumulated data (no longer a separate section in the sheet)
+  const meta = {
+    pipeline_run_date : [...pipelineDates].sort().at(-1) || '—',
+    total_ssr_count   : v1.reduce((a, r) => a + r.ssr_count, 0),
+    unique_flights    : new Set(v5.map(r => `${r.carrier}${r.flight}${r.dDate}`)).size,
+    unique_sectors    : new Set(v3.map(r => r.sector).filter(Boolean)).size
+  };
 
   return { meta, v1, v2, v3, v4, v5 };
 }
 
-// ── 下拉菜单逻辑 (Dropdown Logic) ──
+// ── Custom multi-select dropdown ──────────────────────────
 function toggleDateDropdown() {
   document.getElementById('dateDropdownItems').classList.toggle('hidden');
 }
-
-// 点击外部关闭下拉菜单
 document.addEventListener('click', function(e) {
   const wrapper = document.getElementById('dateFilterWrapper');
   if (wrapper && !wrapper.contains(e.target)) {
     document.getElementById('dateDropdownItems').classList.add('hidden');
   }
 });
-
-// 处理复选框的点击逻辑
 function handleDateChange(type) {
-  const cbAll = document.getElementById('cb_all');
+  const cbAll   = document.getElementById('cb_all');
   const cbItems = document.querySelectorAll('.cb-date');
-
   if (type === 'all') {
-    const isChecked = cbAll.checked;
-    cbItems.forEach(cb => cb.checked = isChecked);
+    cbItems.forEach(cb => cb.checked = cbAll.checked);
   } else {
-    const allChecked = Array.from(cbItems).every(cb => cb.checked);
+    const allChecked  = Array.from(cbItems).every(cb => cb.checked);
     const someChecked = Array.from(cbItems).some(cb => cb.checked);
-    cbAll.checked = allChecked;
-    cbAll.indeterminate = !allChecked && someChecked; // 部分选中效果
+    cbAll.checked       = allChecked;
+    cbAll.indeterminate = !allChecked && someChecked;
   }
-
-  // 更新已选中的状态
-  if (cbAll.checked) {
-    dateFilterState = ['all'];
-  } else {
-    dateFilterState = Array.from(cbItems).filter(cb => cb.checked).map(cb => cb.value);
-  }
-  
+  dateFilterState = cbAll.checked
+    ? ['all']
+    : Array.from(cbItems).filter(cb => cb.checked).map(cb => cb.value);
   updateDateHeader();
-  render(); // 立刻触发图表刷新
+  render();
 }
-
-// 动态更新表头显示的文字
 function updateDateHeader() {
-  const header = document.getElementById('dateSelectHeader');
-  const cbItems = document.querySelectorAll('.cb-date');
-  const checkedCount = Array.from(cbItems).filter(cb => cb.checked).length;
-  
-  if (document.getElementById('cb_all').checked || checkedCount === cbItems.length) {
-    header.textContent = 'All dates';
-    header.style.color = 'var(--text)';
-  } else if (checkedCount === 0) {
+  const header   = document.getElementById('dateSelectHeader');
+  const cbItems  = document.querySelectorAll('.cb-date');
+  const total    = cbItems.length;
+  const checked  = Array.from(cbItems).filter(cb => cb.checked).length;
+  if (checked === 0) {
     header.textContent = '0 selected';
     header.style.color = 'var(--muted)';
-  } else if (checkedCount === 1) {
+  } else if (checked === total || document.getElementById('cb_all').checked) {
+    header.textContent = 'All dates';
+    header.style.color = 'var(--text)';
+  } else if (checked === 1) {
     header.textContent = Array.from(cbItems).find(cb => cb.checked).value;
     header.style.color = 'var(--accent)';
   } else {
-    header.textContent = `${checkedCount} dates selected`;
+    header.textContent = `${checked} dates selected`;
     header.style.color = 'var(--accent)';
   }
 }
 
+// ── Populate filter dropdowns ─────────────────────────────
 function populateFilters() {
   const { v1, v2 } = parseSections(allRows);
-  const bDates = [...new Set(v1.map(r => r.bDate).filter(Boolean))].sort();
-  const carriers = [...new Set(v2.map(r => r.carrier).filter(Boolean))].sort();
 
-  // 生成 Select All 和每个日期的复选框 HTML
+  // Booking dates — from v1
+  const bDates = [...new Set(v1.map(r => r.bDate).filter(Boolean))].sort();
   let html = `<label class="select-all-row"><input type="checkbox" id="cb_all" checked onchange="handleDateChange('all')"> Select All</label>`;
   bDates.forEach(d => {
     html += `<label><input type="checkbox" class="cb-date" value="${d}" checked onchange="handleDateChange('item')"> ${d}</label>`;
   });
   document.getElementById('dateDropdownItems').innerHTML = html;
-  
   dateFilterState = ['all'];
   updateDateHeader();
 
-  document.getElementById('fCarrier').innerHTML = '<option value="all">All carriers</option>' + carriers.map(c => `<option value="${c}">${c}</option>`).join('');
+  // Carriers — from v2
+  const carriers = [...new Set(v2.map(r => r.carrier).filter(Boolean))].sort();
+  document.getElementById('fCarrier').innerHTML =
+    '<option value="all">All carriers</option>' +
+    carriers.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
+// ── Filters ───────────────────────────────────────────────
 function getFilters() {
-  return { 
-    dates: dateFilterState.length === 0 ? ['none'] : dateFilterState, 
-    dur: document.getElementById('fDur').value, 
-    carrier: document.getElementById('fCarrier').value, 
-    promo: document.getElementById('fPromo').value 
+  return {
+    dates   : dateFilterState.length === 0 ? ['none'] : dateFilterState,
+    dur     : document.getElementById('fDur').value,
+    carrier : document.getElementById('fCarrier').value,
+    promo   : document.getElementById('fPromo').value
   };
 }
 
+// keyMap: maps filter keys to the field name on each row object
 function applyFilters(arr, keyMap, f) {
   return arr.filter(r => {
+    // date filter
     if (f.dates && !f.dates.includes('all')) {
-      if (f.dates.includes('none')) return false; 
-      if (keyMap.bDate && !f.dates.includes(r[keyMap.bDate])) return false;
+      if (f.dates.includes('none')) return false;
+      const fieldVal = keyMap.bDate ? r[keyMap.bDate] : null;
+      if (fieldVal && !f.dates.includes(fieldVal)) return false;
     }
+    // duration filter
     if (f.dur !== 'all' && keyMap.dur && r[keyMap.dur] !== f.dur) return false;
+    // carrier filter
     if (f.carrier !== 'all' && keyMap.carrier && r[keyMap.carrier] !== f.carrier) return false;
-    if (f.promo !== 'all') { const v = f.promo === 'null' ? null : f.promo; if (keyMap.promo && r[keyMap.promo] !== v) return false; }
+    // promo filter
+    if (f.promo !== 'all') {
+      const want = f.promo === 'null' ? null : f.promo;
+      if (keyMap.promo) {
+        const got = r[keyMap.promo] === '' ? null : r[keyMap.promo];
+        if (got !== want) return false;
+      }
+    }
     return true;
   });
 }
 
+// ── Render ────────────────────────────────────────────────
 function render() {
   if (!allRows.length) return;
   const { meta, v1, v2, v3, v4, v5 } = parseSections(allRows);
   const f = getFilters();
 
-  const fv1 = applyFilters(v1, { bDate:'bDate', date:'date', dur:'dur', promo:'promo' }, f);
+  const fv1 = applyFilters(v1, { bDate:'bDate', dur:'dur', promo:'promo' }, f);
   const fv2 = applyFilters(v2, { bDate:'bDate', dur:'dur', carrier:'carrier', promo:'promo' }, f);
   const fv3 = applyFilters(v3, { bDate:'bDate', dur:'dur', promo:'promo' }, f);
   const fv4 = applyFilters(v4, { bDate:'bDate', promo:'promo' }, f);
-  const fv5 = applyFilters(v5, { bDate:'bDate', date:'date', carrier:'carrier', promo:'promo' }, f);
+  const fv5 = applyFilters(v5, { bDate:'bDate', dur:'dur', carrier:'carrier', promo:'promo' }, f);
 
-  document.getElementById('lastUpdated').textContent = 'data for: ' + (meta.pipeline_run_date || '—');
-  document.getElementById('runBadge').textContent = 'run: ' + (meta.pipeline_run_date || '—');
+  // Header badges
+  document.getElementById('lastUpdated').textContent = 'latest run: ' + meta.pipeline_run_date;
+  document.getElementById('runBadge').textContent    = 'run: ' + meta.pipeline_run_date;
 
-  const totalSSR = fv1.reduce((a,r) => a + r.ssr_count, 0);
-  const freemealN = fv1.filter(r => r.promo === 'FREEMEAL').reduce((a,r)=>a+r.ssr_count,0);
+  // Metric cards — computed from filtered data
+  const totalSSR  = fv1.reduce((a, r) => a + r.ssr_count, 0);
+  const freemealN = fv1.filter(r => r.promo === 'FREEMEAL').reduce((a, r) => a + r.ssr_count, 0);
+  const uFlights  = new Set(fv5.map(r => `${r.carrier}${r.flight}${r.dDate}`)).size;
+  const uSectors  = new Set(fv3.map(r => r.sector).filter(Boolean)).size;
+
   document.getElementById('metrics').innerHTML = `
     <div class="metric" style="--accent-c:var(--accent)"><p class="metric-label">total ssr count</p><p class="metric-value">${totalSSR.toLocaleString()}</p><p class="metric-sub">meal ssrs in view</p></div>
-    <div class="metric" style="--accent-c:var(--accent2)"><p class="metric-label">unique flights</p><p class="metric-value">${(meta.unique_flights||'—').toLocaleString()}</p><p class="metric-sub">yesterday</p></div>
-    <div class="metric" style="--accent-c:var(--accent4)"><p class="metric-label">unique sectors</p><p class="metric-value">${(meta.unique_sectors||'—').toLocaleString()}</p><p class="metric-sub">routes covered</p></div>
+    <div class="metric" style="--accent-c:var(--accent2)"><p class="metric-label">unique flights</p><p class="metric-value">${uFlights.toLocaleString()}</p><p class="metric-sub">in filtered view</p></div>
+    <div class="metric" style="--accent-c:var(--accent4)"><p class="metric-label">unique sectors</p><p class="metric-value">${uSectors.toLocaleString()}</p><p class="metric-sub">routes covered</p></div>
     <div class="metric" style="--accent-c:var(--accent3)"><p class="metric-label">freemeal ssrs</p><p class="metric-value">${freemealN.toLocaleString()}</p><p class="metric-sub">promo eligible</p></div>
   `;
 
-  const dates = [...new Set(fv1.map(r=>r.date))].sort();
-  rebuildChart('c1', 'bar', { labels: dates, datasets: [{ label:'< 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='< 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 }, { label:'>= 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='>= 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#f87a7a', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
+  // Chart 1 — SSR by departure date & duration
+  const dDates = [...new Set(fv1.map(r => r.dDate).filter(Boolean))].sort();
+  rebuildChart('c1', 'bar', {
+    labels: dDates,
+    datasets: [
+      { label:'< 75 mins',  data: dDates.map(d => fv1.filter(r => r.dDate===d && r.dur==='< 75 mins').reduce((a,r)=>a+r.ssr_count,0)),  backgroundColor:'#D0021B', borderRadius:3 },
+      { label:'>= 75 mins', data: dDates.map(d => fv1.filter(r => r.dDate===d && r.dur==='>= 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#f87a7a', borderRadius:3 }
+    ]
+  }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg1').innerHTML = legend([['#D0021B','< 75 mins'],['#f87a7a','>= 75 mins']]);
 
-  const carriers = [...new Set(fv2.map(r=>r.carrier))].sort();
-  rebuildChart('c2', 'bar', { labels: carriers, datasets: [{ data:carriers.map(c=>fv2.filter(r=>r.carrier===c).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#e8722a', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
+  // Chart 2 — SSR by carrier
+  const carriers = [...new Set(fv2.map(r => r.carrier).filter(Boolean))].sort();
+  rebuildChart('c2', 'bar', {
+    labels: carriers,
+    datasets: [{ data: carriers.map(c => fv2.filter(r=>r.carrier===c).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#e8722a', borderRadius:3 }]
+  }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg2').innerHTML = legend([['#e8722a','SSR count']]);
 
-  const sMap = {}; fv3.forEach(r => { sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
+  // Chart 3 — Top sectors
+  const sMap = {};
+  fv3.forEach(r => { sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
   const sortedS = Object.entries(sMap).sort((a,b)=>b[1]-a[1]).slice(0,14);
   document.getElementById('c3wrap').style.height = Math.max(220, sortedS.length * 32 + 60) + 'px';
-  rebuildChart('c3', 'bar', { labels: sortedS.map(s=>s[0]), datasets: [{ data:sortedS.map(s=>s[1]), backgroundColor:'#D0021B', borderRadius:3 }] }, { indexAxis:'y', scales:{ x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}}, y:{grid:{color:'rgba(0,0,0,.06)'}} }});
+  rebuildChart('c3', 'bar', {
+    labels: sortedS.map(s=>s[0]),
+    datasets: [{ data: sortedS.map(s=>s[1]), backgroundColor:'#D0021B', borderRadius:3 }]
+  }, { indexAxis:'y', scales:{ x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}}, y:{grid:{color:'rgba(0,0,0,.06)'}} }});
 
+  // Chart 4 — FREEMEAL vs paid split
   const ftypes = [...new Set(fv4.map(r=>r.flight_type).filter(Boolean))].sort();
-  rebuildChart('c4', 'bar', { labels: ftypes, datasets: [{ data:ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 }, { data:ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&(r.promo===null||r.promo==='null'||r.promo==='')).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#1a7a3f', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
+  rebuildChart('c4', 'bar', {
+    labels: ftypes,
+    datasets: [
+      { label:'FREEMEAL',  data: ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0)),                         backgroundColor:'#D0021B', borderRadius:3 },
+      { label:'Paid meal', data: ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&(r.promo===null||r.promo==='')).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#1a7a3f', borderRadius:3 }
+    ]
+  }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg4').innerHTML = legend([['#D0021B','FREEMEAL'],['#1a7a3f','Paid meal']]);
 
+  // Chart 5 — Top flights
   const fltMap = {};
   fv5.forEach(r => {
-    const fName = `${r.carrier}${r.flight} (${r.date})`;
-    fltMap[fName] = (fltMap[fName]||0) + r.ssr_count;
+    const key = `${r.carrier}${r.flight} (${r.dDate})`;
+    fltMap[key] = (fltMap[key]||0) + r.ssr_count;
   });
-  
-  const sortedF = Object.entries(fltMap).sort((a,b) => b[1] - a[1]).slice(0, 15);
+  const sortedF = Object.entries(fltMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
   document.getElementById('c5wrap').style.height = Math.max(220, sortedF.length * 32 + 60) + 'px';
-  
   rebuildChart('c5', 'bar', {
-    labels: sortedF.map(s => s[0]),
-    datasets: [{ data: sortedF.map(s => s[1]), backgroundColor: '#1a1a1a', borderRadius: 3 }]
-  }, {
-    indexAxis: 'y',
-    scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.06)' } }, y: { ticks: { color: '#6b7280', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.06)' } } }
-  });
+    labels: sortedF.map(s=>s[0]),
+    datasets: [{ data: sortedF.map(s=>s[1]), backgroundColor:'#1a1a1a', borderRadius:3 }]
+  }, { indexAxis:'y', scales:{ x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}}, y:{ticks:{color:'#6b7280',font:{size:11}},grid:{color:'rgba(0,0,0,.06)'}} }});
 }
 
 function rebuildChart(id, type, data, options) {
   if (charts[id]) charts[id].destroy();
-  charts[id] = new Chart(document.getElementById(id), { type, data, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, ...options }});
+  charts[id] = new Chart(document.getElementById(id), {
+    type,
+    data,
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, ...options }
+  });
 }
-function legend(pairs) { return pairs.map(([c, l]) => `<span><span class="legend-dot" style="background:${c}"></span>${l}</span>`).join(''); }
+function legend(pairs) {
+  return pairs.map(([c,l]) => `<span><span class="legend-dot" style="background:${c}"></span>${l}</span>`).join('');
+}
+
 loadData();
 </script>
 </body>
