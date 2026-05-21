@@ -1,419 +1,378 @@
-// ============================================================
-// Free Meal Dashboard — Daily Pipeline
-// Runs: Every day at 9:00 AM MYT (UTC+8)
-// Flow: BigQuery (yesterday 00:00–23:59 MYT) → Google Sheets
-// ============================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Meal Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  /* ── Reset & Base ────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #f5f6f8;
+    --surface:   #ffffff;
+    --surface2:  #f0f1f3;
+    --border:    #e2e5ea;
+    --accent:    #D0021B;
+    --accent2:   #e8722a;
+    --accent3:   #1a7a3f;
+    --accent4:   #1a1a1a;
+    --text:      #1a1a1a;
+    --muted:     #6b7280;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+  .shell { max-width: 1280px; margin: 0 auto; padding: 0 24px 64px; }
 
-// ── CONFIG ──────────────────────────────────────────────────
-const SPREADSHEET_ID  = '1EF5ADeWpdKY2b5ySnQO4YURp-jvn0_Y67HnkHO-6ORE';   
-const GCP_PROJECT_ID  = 'airasia-opdatalake-prd';   
-const RAW_SHEET       = 'RawDetail';
-const SUMMARY_SHEET   = 'Summary';
-// ────────────────────────────────────────────────────────────
+  /* ── Header ──────────────────────────────── */
+  header { padding: 24px 0 20px; border-bottom: 2px solid var(--accent); display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .header-logo { background: #D0021B; color: #ffffff !important; font-family: var(--sans); font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 4px; margin-right: 10px; letter-spacing: .02em; display: inline-block; }
+  .header-left h1 { font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); display: flex; align-items: center; }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p { font-size: 12px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); background: var(--surface); }
+  .badge.live { border-color: var(--accent); color: var(--accent); background: #fff0f0; }
 
+  /* ── Controls (包含复选框下拉菜单的样式) ── */
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; align-items: flex-end; }
+  .controls > div > label { font-size: 11px; color: var(--muted); font-family: var(--mono); display: block; margin-bottom: 4px; }
+  .controls select { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 6px; cursor: pointer; min-width: 140px; box-shadow: 0 1px 2px rgba(0,0,0,.06); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+  .controls select:hover { border-color: var(--accent); }
 
-// ============================================================
-// MANUAL ENTRY POINT — 用于手动抓取特定日期和时间的数据
-// ============================================================
-function runManualBackfill() {
-  // 👇 在这里修改你想要抓取的 MYT 精确日期和时间
-  const startMyt = '2026-05-18 00:00:00'; 
-  const endMyt   = '2026-05-19 23:59:59';
-
-  // 将 MYT 时间安全地转换为 BigQuery 需要的 UTC 时间
-  const startUtc = new Date(startMyt.replace(' ', 'T') + '+08:00').toISOString().replace('.000', '');
-  const endUtc   = new Date(endMyt.replace(' ', 'T') + '+08:00').toISOString().replace('.000', '');
+  /* 定制带 Checkbox 的下拉菜单 CSS */
+  .custom-select { position: relative; display: inline-block; min-width: 170px; }
+  .select-selected { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 6px; cursor: pointer; user-select: none; box-shadow: 0 1px 2px rgba(0,0,0,.06); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.15s; }
+  .select-selected:hover { border-color: var(--accent); }
+  .select-items { position: absolute; background-color: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 6px; margin-top: 4px; z-index: 99; max-height: 300px; overflow-y: auto; width: max-content; min-width: 100%; }
+  .select-items.hidden { display: none; }
+  .select-items label { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--text); font-family: var(--sans); font-weight: normal; margin-bottom: 0; transition: background 0.1s; }
+  .select-items label:hover { background-color: var(--surface2); }
+  .select-items input[type="checkbox"] { margin-right: 10px; accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; }
+  .select-all-row { border-bottom: 1px solid var(--border); font-weight: 600 !important; background-color: #fafafa; }
   
-  const label = `Manual: ${startMyt} to ${endMyt}`;
+  .btn-refresh { background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 6px 18px; border-radius: 6px; cursor: pointer; align-self: stretch; transition: background .15s; margin-bottom: 0px; height: 33px;}
+  .btn-refresh:hover { background: #b0011a; }
 
-  Logger.log(`Running MANUAL backfill for: ${label}  (${startUtc} → ${endUtc} UTC)`);
+  /* ── Metric cards ────────────────────────── */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; position: relative; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .metric::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent-c, var(--accent)); }
+  .metric-label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .metric-value { font-size: 26px; font-weight: 600; color: var(--text); }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-  try {
-    const rows = queryBigQuery(startUtc, endUtc);
-    Logger.log(`Rows returned: ${rows.length}`);
+  /* ── Chart panels ────────────────────────── */
+  .panel-title { font-family: var(--sans); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-1 { margin-bottom: 16px; }
+  @media (max-width: 780px) { .grid-2 { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .chart-wrap { position: relative; width: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 11px; color: var(--muted); font-family: var(--sans); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-    if (rows.length > 0) {
-      writeRawDetail(rows, label);
-      writeSummary(rows, label);
-      Logger.log('Manual backfill complete.');
-    } else {
-      Logger.log('No data found for this time range.');
-    }
+  /* ── Loader ─────────────────────────────── */
+  #loader { position: fixed; inset: 0; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 16px; transition: opacity .4s; }
+  #loader.hidden { opacity: 0; pointer-events: none; }
+  .spinner { width: 32px; height: 32px; border: 2px solid #eee; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { background: #fff0f0; border: 1px solid #fca5a5; color: var(--accent); border-radius: 8px; padding: 16px 20px; font-family: var(--sans); font-size: 13px; margin-bottom: 24px; display: none; }
+</style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div><p style="font-size:13px;color:#6b7280;font-family:'IBM Plex Sans'">loading data from secure API…</p></div>
+
+<div class="shell">
+  <header>
+    <div class="header-left">
+      <h1><span class="header-logo">AirAsia</span> Free Meal <span>Dashboard</span></h1>
+      <p id="lastUpdated">—</p>
+    </div>
+    <div class="header-right"><span class="badge live">● live</span><span class="badge" id="runBadge">—</span></div>
+  </header>
+
+  <div class="controls">
     
-  } catch (e) {
-    Logger.log('Pipeline error: ' + e.message);
-    throw e;
-  }
-}
+    <div>
+      <label>Booking Creation Date</label>
+      <div class="custom-select" id="dateFilterWrapper">
+        <div class="select-selected" id="dateSelectHeader" onclick="toggleDateDropdown()">All dates</div>
+        <div class="select-items hidden" id="dateDropdownItems">
+          </div>
+      </div>
+    </div>
 
+    <div>
+      <label>Duration</label>
+      <select id="fDur" onchange="render()"><option value="all">All durations</option><option value="< 75 mins">< 75 mins</option><option value=">= 75 mins">>= 75 mins</option></select>
+    </div>
+    <div>
+      <label>Carrier</label>
+      <select id="fCarrier" onchange="render()"><option value="all">All carriers</option></select>
+    </div>
+    <div>
+      <label>Promo</label>
+      <select id="fPromo" onchange="render()"><option value="all">All</option><option value="FREEMEAL">FREEMEAL only</option><option value="null">Paid meals only</option></select>
+    </div>
+    <button class="btn-refresh" onclick="loadData()">↺ Refresh</button>
+  </div>
 
-// ============================================================
-// AUTOMATED ENTRY POINT — 每天早上 9 点自动运行的函数
-// ============================================================
-function runPipeline() {
-  const { startUtc, endUtc, label } = getYesterdayWindowUtc();
-  Logger.log(`Running pipeline for: ${label}  (${startUtc} → ${endUtc} UTC)`);
+  <div class="error-box" id="errorBox"></div>
+  <div class="metrics" id="metrics"></div>
 
+  <div class="grid-2">
+    <div class="panel"><p class="panel-title">01 — SSR count by date &amp; duration</p><div class="legend" id="leg1"></div><div class="chart-wrap" style="height:220px"><canvas id="c1"></canvas></div></div>
+    <div class="panel"><p class="panel-title">02 — SSR count by carrier</p><div class="legend" id="leg2"></div><div class="chart-wrap" style="height:220px"><canvas id="c2"></canvas></div></div>
+  </div>
+
+  <div class="grid-1 panel" style="margin-bottom:16px">
+    <p class="panel-title">03 — Top sectors by SSR count</p>
+    <div class="chart-wrap" id="c3wrap" style="height:280px"><canvas id="c3"></canvas></div>
+  </div>
+
+  <div class="grid-1 panel" style="margin-bottom:16px">
+    <p class="panel-title">04 — FREEMEAL vs paid meal split</p>
+    <div class="legend" id="leg4"></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="c4"></canvas></div>
+  </div>
+
+  <div class="grid-1 panel">
+    <p class="panel-title">05 — Top Flights by SSR Count &amp; Date</p>
+    <div class="chart-wrap" id="c5wrap" style="height:300px"><canvas id="c5"></canvas></div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzTOtU7s-oBkqCbfOff43tHHf3XzCyWqYVG4yfP1FRaJ8GUQRZ9Dk-FBwmD0buxU3NgSA/exec';
+// ──────────────────────────────────────────────────────────
+
+let allRows = [];
+const charts = {};
+let dateFilterState = ['all']; // 记录选中的日期数组
+
+async function loadData() {
+  document.getElementById('loader').classList.remove('hidden');
+  document.getElementById('errorBox').style.display = 'none';
   try {
-    const rows = queryBigQuery(startUtc, endUtc);
-    Logger.log(`Rows returned: ${rows.length}`);
-
-    writeRawDetail(rows, label);
-    writeSummary(rows, label);
-
-    Logger.log('Pipeline complete.');
-  } catch (e) {
-    Logger.log('Pipeline error: ' + e.message);
-    throw e;
+    const res = await fetch(WEB_APP_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    allRows = await res.json(); 
+    populateFilters();
+    render();
+  } catch(e) {
+    document.getElementById('errorBox').innerHTML = 'Could not load data. Make sure the API is running correctly.<br><br>Error: ' + e.message;
+    document.getElementById('errorBox').style.display = 'block';
+  } finally {
+    document.getElementById('loader').classList.add('hidden');
   }
 }
 
+function parseSections(raw) {
+  const meta = {};
+  const v1 = [], v2 = [], v3 = [], v4 = [], v5 = [];
+  let section = null;
 
-// ============================================================
-// DATE WINDOW
-// ============================================================
-function getYesterdayWindowUtc() {
-  const now    = new Date();
-  const myt    = new Date(now.getTime() + 8 * 60 * 60 * 1000); 
-  const yMyt   = new Date(myt);
-  yMyt.setUTCDate(yMyt.getUTCDate() - 1);
+  raw.forEach(row => {
+    const first = String(row[0] || '').trim();
+    if (!first) { section = null; return; }
 
-  const yDate  = yMyt.toISOString().slice(0, 10);              
-  const startUtc = new Date(yDate + 'T00:00:00+08:00').toISOString().replace('.000', '');
-  const endUtc   = new Date(yDate + 'T23:59:59+08:00').toISOString().replace('.000', '');
+    if (first === 'pipeline_run_date') { meta.pipeline_run_date = row[1]; return; }
+    if (first === 'total_ssr_count')   { meta.total_ssr_count   = row[1]; return; }
+    if (first === 'unique_flights')    { meta.unique_flights    = row[1]; return; }
+    if (first === 'unique_sectors')    { meta.unique_sectors    = row[1]; return; }
 
-  return { startUtc, endUtc, label: yDate };
+    if (first === '[view1] by_date_duration') { section = 'v1'; return; }
+    if (first === '[view2] by_carrier')       { section = 'v2'; return; }
+    if (first === '[view3] by_sector')        { section = 'v3'; return; }
+    if (first === '[view4] by_promo')         { section = 'v4'; return; }
+    if (first === '[view5] by_flight')        { section = 'v5'; return; }
+
+    if (first === 'booking_date' || first === 'departure_date' || first === 'carrier_code' || first === 'sector' || first === 'booking_promo_code') return;
+
+    const toDate = v => v ? String(v).slice(0, 10) : null;
+
+    if (section === 'v1') v1.push({ bDate: toDate(row[0]), date: toDate(row[1]), dur: row[2], promo: row[3], ssr_count: +row[4]||0 });
+    if (section === 'v2') v2.push({ bDate: toDate(row[0]), carrier: row[1], dur: row[2], promo: row[3], ssr_count: +row[4]||0 });
+    if (section === 'v3') v3.push({ bDate: toDate(row[0]), sector: row[1], flight_type: row[4], dur: row[5], promo: row[6], ssr_count: +row[7]||0 });
+    if (section === 'v4') v4.push({ bDate: toDate(row[0]), promo: row[1], flight_type: row[2], ssr_code: row[3], ssr_count: +row[4]||0 });
+    if (section === 'v5') v5.push({ bDate: toDate(row[0]), date: toDate(row[1]), carrier: row[2], flight: row[3], promo: row[4], ssr_count: +row[5]||0 });
+  });
+
+  return { meta, v1, v2, v3, v4, v5 };
 }
 
+// ── 下拉菜单逻辑 (Dropdown Logic) ──
+function toggleDateDropdown() {
+  document.getElementById('dateDropdownItems').classList.toggle('hidden');
+}
 
-// ============================================================
-// BIGQUERY
-// ============================================================
-function queryBigQuery(startUtc, endUtc) {
-  const sql = buildSql(startUtc, endUtc);
+// 点击外部关闭下拉菜单
+document.addEventListener('click', function(e) {
+  const wrapper = document.getElementById('dateFilterWrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    document.getElementById('dateDropdownItems').classList.add('hidden');
+  }
+});
 
-  const request = {
-    query          : sql,
-    useLegacySql   : false,
-    timeoutMs      : 120000,
-    location       : 'asia-southeast1'   
+// 处理复选框的点击逻辑
+function handleDateChange(type) {
+  const cbAll = document.getElementById('cb_all');
+  const cbItems = document.querySelectorAll('.cb-date');
+
+  if (type === 'all') {
+    const isChecked = cbAll.checked;
+    cbItems.forEach(cb => cb.checked = isChecked);
+  } else {
+    const allChecked = Array.from(cbItems).every(cb => cb.checked);
+    const someChecked = Array.from(cbItems).some(cb => cb.checked);
+    cbAll.checked = allChecked;
+    cbAll.indeterminate = !allChecked && someChecked; // 部分选中效果
+  }
+
+  // 更新已选中的状态
+  if (cbAll.checked) {
+    dateFilterState = ['all'];
+  } else {
+    dateFilterState = Array.from(cbItems).filter(cb => cb.checked).map(cb => cb.value);
+  }
+  
+  updateDateHeader();
+  render(); // 立刻触发图表刷新
+}
+
+// 动态更新表头显示的文字
+function updateDateHeader() {
+  const header = document.getElementById('dateSelectHeader');
+  const cbItems = document.querySelectorAll('.cb-date');
+  const checkedCount = Array.from(cbItems).filter(cb => cb.checked).length;
+  
+  if (document.getElementById('cb_all').checked || checkedCount === cbItems.length) {
+    header.textContent = 'All dates';
+    header.style.color = 'var(--text)';
+  } else if (checkedCount === 0) {
+    header.textContent = '0 selected';
+    header.style.color = 'var(--muted)';
+  } else if (checkedCount === 1) {
+    header.textContent = Array.from(cbItems).find(cb => cb.checked).value;
+    header.style.color = 'var(--accent)';
+  } else {
+    header.textContent = `${checkedCount} dates selected`;
+    header.style.color = 'var(--accent)';
+  }
+}
+
+function populateFilters() {
+  const { v1, v2 } = parseSections(allRows);
+  const bDates = [...new Set(v1.map(r => r.bDate).filter(Boolean))].sort();
+  const carriers = [...new Set(v2.map(r => r.carrier).filter(Boolean))].sort();
+
+  // 生成 Select All 和每个日期的复选框 HTML
+  let html = `<label class="select-all-row"><input type="checkbox" id="cb_all" checked onchange="handleDateChange('all')"> Select All</label>`;
+  bDates.forEach(d => {
+    html += `<label><input type="checkbox" class="cb-date" value="${d}" checked onchange="handleDateChange('item')"> ${d}</label>`;
+  });
+  document.getElementById('dateDropdownItems').innerHTML = html;
+  
+  dateFilterState = ['all'];
+  updateDateHeader();
+
+  document.getElementById('fCarrier').innerHTML = '<option value="all">All carriers</option>' + carriers.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function getFilters() {
+  return { 
+    dates: dateFilterState.length === 0 ? ['none'] : dateFilterState, 
+    dur: document.getElementById('fDur').value, 
+    carrier: document.getElementById('fCarrier').value, 
+    promo: document.getElementById('fPromo').value 
   };
-
-  let response = BigQuery.Jobs.query(request, GCP_PROJECT_ID);
-  const jobId  = response.jobReference.jobId;
-
-  let attempts = 0;
-  while (!response.jobComplete && attempts < 30) {
-    Utilities.sleep(3000);
-    response = BigQuery.Jobs.getQueryResults(GCP_PROJECT_ID, jobId, { timeoutMs: 10000, location: 'asia-southeast1' });
-    attempts++;
-  }
-
-  if (!response.jobComplete) throw new Error('BigQuery job timed out');
-
-  const schema = response.schema.fields.map(f => f.name);
-  const rows   = [];
-
-  let pageToken = null;
-  do {
-    const opts = { maxResults: 2000, location: 'asia-southeast1' };
-    if (pageToken) opts.pageToken = pageToken;
-    const page = BigQuery.Jobs.getQueryResults(GCP_PROJECT_ID, jobId, opts);
-
-    (page.rows || []).forEach(r => {
-      const obj = {};
-      schema.forEach((col, i) => { obj[col] = r.f[i].v; });
-      rows.push(obj);
-    });
-
-    pageToken = page.pageToken;
-  } while (pageToken);
-
-  return rows;
 }
 
+function applyFilters(arr, keyMap, f) {
+  return arr.filter(r => {
+    if (f.dates && !f.dates.includes('all')) {
+      if (f.dates.includes('none')) return false; 
+      if (keyMap.bDate && !f.dates.includes(r[keyMap.bDate])) return false;
+    }
+    if (f.dur !== 'all' && keyMap.dur && r[keyMap.dur] !== f.dur) return false;
+    if (f.carrier !== 'all' && keyMap.carrier && r[keyMap.carrier] !== f.carrier) return false;
+    if (f.promo !== 'all') { const v = f.promo === 'null' ? null : f.promo; if (keyMap.promo && r[keyMap.promo] !== v) return false; }
+    return true;
+  });
+}
 
-// ============================================================
-// SQL — 保持原有列不变，把拆分的日期和时间加到最后
-// ============================================================
-function buildSql(startUtc, endUtc) {
-  return `
-WITH
+function render() {
+  if (!allRows.length) return;
+  const { meta, v1, v2, v3, v4, v5 } = parseSections(allRows);
+  const f = getFilters();
 
-meal_ssr_codes AS (
-  SELECT ssr_code, name AS ssr_name, ssr_type
-  FROM NAVITAIRE.ssr
-  WHERE ssr_type = 2
-    AND COALESCE(inactive, 0) = 0
-),
+  const fv1 = applyFilters(v1, { bDate:'bDate', date:'date', dur:'dur', promo:'promo' }, f);
+  const fv2 = applyFilters(v2, { bDate:'bDate', dur:'dur', carrier:'carrier', promo:'promo' }, f);
+  const fv3 = applyFilters(v3, { bDate:'bDate', dur:'dur', promo:'promo' }, f);
+  const fv4 = applyFilters(v4, { bDate:'bDate', promo:'promo' }, f);
+  const fv5 = applyFilters(v5, { bDate:'bDate', date:'date', carrier:'carrier', promo:'promo' }, f);
 
-first_leg_per_segment AS (
-  SELECT passenger_id, segment_id, MIN(inventory_leg_id) AS inventory_leg_id
-  FROM NAVITAIRE.passenger_journey_leg
-  GROUP BY passenger_id, segment_id
-),
+  document.getElementById('lastUpdated').textContent = 'data for: ' + (meta.pipeline_run_date || '—');
+  document.getElementById('runBadge').textContent = 'run: ' + (meta.pipeline_run_date || '—');
 
-meal_ssr_on_flights AS (
-  SELECT DISTINCT
-    pjs.passenger_id, pjs.segment_id, pjs.booking_status,
-    pjssr.ssr_code, pjssr.ssr_detail, pjssr.is_in_service_bundle,
-    fl.inventory_leg_id
-  FROM NAVITAIRE.passenger_journey_segment AS pjs
-  INNER JOIN NAVITAIRE.passenger_journey_ssr AS pjssr
-    ON pjs.passenger_id = pjssr.passenger_id AND pjs.segment_id = pjssr.segment_id
-  INNER JOIN meal_ssr_codes AS mc ON pjssr.ssr_code = mc.ssr_code
-  INNER JOIN first_leg_per_segment AS fl
-    ON pjs.passenger_id = fl.passenger_id AND pjs.segment_id = fl.segment_id
-  WHERE pjs.booking_status = 'HK'
-    AND COALESCE(pjssr.delete_flag, 0) = 0
-),
+  const totalSSR = fv1.reduce((a,r) => a + r.ssr_count, 0);
+  const freemealN = fv1.filter(r => r.promo === 'FREEMEAL').reduce((a,r)=>a+r.ssr_count,0);
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric" style="--accent-c:var(--accent)"><p class="metric-label">total ssr count</p><p class="metric-value">${totalSSR.toLocaleString()}</p><p class="metric-sub">meal ssrs in view</p></div>
+    <div class="metric" style="--accent-c:var(--accent2)"><p class="metric-label">unique flights</p><p class="metric-value">${(meta.unique_flights||'—').toLocaleString()}</p><p class="metric-sub">yesterday</p></div>
+    <div class="metric" style="--accent-c:var(--accent4)"><p class="metric-label">unique sectors</p><p class="metric-value">${(meta.unique_sectors||'—').toLocaleString()}</p><p class="metric-sub">routes covered</p></div>
+    <div class="metric" style="--accent-c:var(--accent3)"><p class="metric-label">freemeal ssrs</p><p class="metric-value">${freemealN.toLocaleString()}</p><p class="metric-sub">promo eligible</p></div>
+  `;
 
-station_country AS (
-  SELECT station_code, country_code FROM NAVITAIRE.station
-),
+  const dates = [...new Set(fv1.map(r=>r.date))].sort();
+  rebuildChart('c1', 'bar', { labels: dates, datasets: [{ label:'< 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='< 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 }, { label:'>= 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='>= 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#f87a7a', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
+  document.getElementById('leg1').innerHTML = legend([['#D0021B','< 75 mins'],['#f87a7a','>= 75 mins']]);
 
-meal_with_flight AS (
-  SELECT
-    mof.passenger_id, mof.segment_id, mof.ssr_code, mof.ssr_detail,
-    mof.is_in_service_bundle,
-    io.carrier_code, io.flight_number,
-    io.departure_station, io.arrival_station,
-    dep_stn.country_code AS departure_country,
-    arr_stn.country_code AS arrival_country,
-    CASE
-      WHEN dep_stn.country_code IS NULL OR arr_stn.country_code IS NULL THEN 'UNKNOWN'
-      WHEN dep_stn.country_code = arr_stn.country_code THEN 'DOMESTIC'
-      ELSE 'INTERNATIONAL'
-    END AS flight_type,
-    DATE(io.std_utc) AS flight_date,
-    io.std_utc, io.sta_utc,
-    TIMESTAMP_DIFF(io.sta_utc, io.std_utc, MINUTE) AS flight_duration_mins,
-    CASE
-      WHEN TIMESTAMP_DIFF(io.sta_utc, io.std_utc, MINUTE) < 75 THEN '< 75 mins'
-      ELSE '>= 75 mins'
-    END AS flight_duration_category,
-    mc.ssr_name, mc.ssr_type
-  FROM meal_ssr_on_flights AS mof
-  INNER JOIN NAVITAIRE.inventory_object AS io ON mof.inventory_leg_id = io.inventory_leg_id
-  INNER JOIN meal_ssr_codes AS mc ON mof.ssr_code = mc.ssr_code
-  LEFT JOIN station_country AS dep_stn ON io.departure_station = dep_stn.station_code
-  LEFT JOIN station_country AS arr_stn ON io.arrival_station   = arr_stn.station_code
-  WHERE DATE(io.std_utc) >= DATE_SUB(CURRENT_DATE('Asia/Kuala_Lumpur'), INTERVAL 90 DAY)
-    AND DATE(io.std_utc) <= '2026-08-31'
-),
+  const carriers = [...new Set(fv2.map(r=>r.carrier))].sort();
+  rebuildChart('c2', 'bar', { labels: carriers, datasets: [{ data:carriers.map(c=>fv2.filter(r=>r.carrier===c).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#e8722a', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
+  document.getElementById('leg2').innerHTML = legend([['#e8722a','SSR count']]);
 
-meal_with_booking AS (
-  SELECT
-    b.record_locator,
-    b.booking_id,
-    CASE
-      WHEN b.booking_promo_code = 'FREEMEAL'
-       AND mwf.ssr_code IN ('CRCB','ORMX','UCTX','CLCB')
-       AND mwf.flight_type = 'INTERNATIONAL' THEN 'FREEMEAL'
-      ELSE NULL
-    END AS booking_promo_code,
-    b.created_date AS booking_created_date,
-    DATETIME(b.created_date, 'Asia/Kuala_Lumpur') AS booking_created_date_my,
-    bp.passenger_id, bp.first_name, bp.last_name, bp.pax_type,
-    mwf.carrier_code, mwf.flight_number, mwf.flight_date AS departure_date,
-    mwf.departure_station, mwf.arrival_station,
-    mwf.departure_country, arrival_country, flight_type,
-    mwf.std_utc, mwf.sta_utc,
-    mwf.flight_duration_mins, mwf.flight_duration_category,
-    mwf.ssr_code, mwf.ssr_detail, mwf.is_in_service_bundle,
-    mwf.ssr_name, mwf.segment_id
-  FROM meal_with_flight AS mwf
-  INNER JOIN NAVITAIRE.booking_passenger AS bp ON mwf.passenger_id = bp.passenger_id
-  INNER JOIN NAVITAIRE.booking AS b ON bp.booking_id = b.booking_id
-  WHERE b.status = 2
-    AND b.created_date >= TIMESTAMP('${startUtc}')
-    AND b.created_date <  TIMESTAMP('${endUtc}')
-),
+  const sMap = {}; fv3.forEach(r => { sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
+  const sortedS = Object.entries(sMap).sort((a,b)=>b[1]-a[1]).slice(0,14);
+  document.getElementById('c3wrap').style.height = Math.max(220, sortedS.length * 32 + 60) + 'px';
+  rebuildChart('c3', 'bar', { labels: sortedS.map(s=>s[0]), datasets: [{ data:sortedS.map(s=>s[1]), backgroundColor:'#D0021B', borderRadius:3 }] }, { indexAxis:'y', scales:{ x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}}, y:{grid:{color:'rgba(0,0,0,.06)'}} }});
 
-deduped_meals AS (
-  SELECT *,
-    ROW_NUMBER() OVER (
-      PARTITION BY booking_id, passenger_id, flight_number, departure_date, ssr_code, booking_promo_code
-      ORDER BY segment_id
-    ) AS rn
-  FROM meal_with_booking
-)
+  const ftypes = [...new Set(fv4.map(r=>r.flight_type).filter(Boolean))].sort();
+  rebuildChart('c4', 'bar', { labels: ftypes, datasets: [{ data:ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 }, { data:ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&(r.promo===null||r.promo==='null'||r.promo==='')).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#1a7a3f', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
+  document.getElementById('leg4').innerHTML = legend([['#D0021B','FREEMEAL'],['#1a7a3f','Paid meal']]);
 
-SELECT
-  record_locator, booking_id, booking_promo_code,
-  CAST(booking_created_date AS STRING)    AS booking_created_date,
-  CAST(booking_created_date_my AS STRING) AS booking_created_date_my,
-  passenger_id, first_name, last_name, pax_type,
-  carrier_code, flight_number,
-  CAST(departure_date AS STRING)          AS departure_date,
-  departure_station, arrival_station,
-  departure_country, arrival_country, flight_type,
-  CAST(std_utc AS STRING)                 AS std_utc,
-  CAST(sta_utc AS STRING)                 AS sta_utc,
-  flight_duration_mins, flight_duration_category,
-  ssr_code, ssr_detail,
-  CAST(is_in_service_bundle AS STRING)    AS is_in_service_bundle,
-  ssr_name,
+  const fltMap = {};
+  fv5.forEach(r => {
+    const fName = `${r.carrier}${r.flight} (${r.date})`;
+    fltMap[fName] = (fltMap[fName]||0) + r.ssr_count;
+  });
   
-  CAST(DATE(booking_created_date) AS STRING)      AS booking_created_date_only,
-  CAST(TIME(booking_created_date) AS STRING)      AS booking_created_time_only,
-  CAST(DATE(booking_created_date_my) AS STRING)   AS booking_created_date_my_only,
-  CAST(TIME(booking_created_date_my) AS STRING)   AS booking_created_time_my_only
+  const sortedF = Object.entries(fltMap).sort((a,b) => b[1] - a[1]).slice(0, 15);
+  document.getElementById('c5wrap').style.height = Math.max(220, sortedF.length * 32 + 60) + 'px';
   
-FROM deduped_meals
-WHERE rn = 1
-ORDER BY departure_date, std_utc, carrier_code, flight_number, passenger_id, ssr_code
-`;
-}
-
-
-// ============================================================
-// WRITE RAW DETAIL TAB
-// ============================================================
-function writeRawDetail(rows, label) {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  let sheet   = ss.getSheetByName(RAW_SHEET);
-  if (!sheet) sheet = ss.insertSheet(RAW_SHEET);
-
-  const COLS = [
-    'record_locator','booking_id','booking_promo_code',
-    'booking_created_date','booking_created_date_my',
-    'passenger_id','first_name','last_name','pax_type',
-    'carrier_code','flight_number','departure_date',
-    'departure_station','arrival_station',
-    'departure_country','arrival_country','flight_type',
-    'std_utc','sta_utc','flight_duration_mins','flight_duration_category',
-    'ssr_code','ssr_detail','is_in_service_bundle','ssr_name',
-    'pipeline_run_date',       
-    'pipeline_run_timestamp',
-    // 加在最后面，完全不影响旧的表头顺序
-    'booking_created_date_only',
-    'booking_created_time_only',
-    'booking_created_date_my_only',
-    'booking_created_time_my_only'
-  ];
-
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(COLS);
-    sheet.getRange(1, 1, 1, COLS.length).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-  }
-
-  if (rows.length === 0) return;
-
-  const nowMyt = new Date(new Date().getTime() + 8 * 60 * 60 * 1000);
-  const runTs  = nowMyt.toISOString().replace('T', ' ').slice(0, 19);
-
-  const data = rows.map(r => COLS.map(c => {
-    if (c === 'pipeline_run_date')      return label;
-    if (c === 'pipeline_run_timestamp') return runTs;
-    return r[c] ?? '';
-  }));
-
-  sheet.getRange(sheet.getLastRow() + 1, 1, data.length, COLS.length).setValues(data);
-}
-
-
-// ============================================================
-// WRITE SUMMARY TAB — 已加入 Booking Date 用于前台筛选
-// ============================================================
-function writeSummary(rows, label) {
-  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
-  let sheet   = ss.getSheetByName(SUMMARY_SHEET);
-  if (!sheet) sheet = ss.insertSheet(SUMMARY_SHEET);
-  sheet.clearContents();
-
-  const output = [];
-
-  output.push(['pipeline_run_date', label]);
-  output.push(['total_ssr_count',   rows.length]);
-  output.push(['unique_flights',    [...new Set(rows.map(r => r.carrier_code + r.flight_number + r.departure_date))].length]);
-  output.push(['unique_sectors',    [...new Set(rows.map(r => r.departure_station + '-' + r.arrival_station))].length]);
-  output.push([]);
-
-  // ── View 1: by date + duration
-  output.push(['[view1] by_date_duration']);
-  output.push(['booking_date', 'departure_date','flight_duration_category','booking_promo_code','ssr_count','unique_pax']);
-  const v1 = groupBy(rows, r => `${r.booking_created_date_my_only}|${r.departure_date}|${r.flight_duration_category}|${r.booking_promo_code}`);
-  Object.entries(v1).forEach(([key, grp]) => {
-    const [bDate, dDate, dur, promo] = key.split('|');
-    output.push([bDate, dDate, dur, promo, grp.length, new Set(grp.map(r=>r.passenger_id)).size]);
-  });
-  output.push([]);
-
-  // ── View 2: by carrier
-  output.push(['[view2] by_carrier']);
-  output.push(['booking_date', 'carrier_code','flight_duration_category','booking_promo_code','ssr_count','unique_pax']);
-  const v2 = groupBy(rows, r => `${r.booking_created_date_my_only}|${r.carrier_code}|${r.flight_duration_category}|${r.booking_promo_code}`);
-  Object.entries(v2).forEach(([key, grp]) => {
-    const [bDate, carrier, dur, promo] = key.split('|');
-    output.push([bDate, carrier, dur, promo, grp.length, new Set(grp.map(r=>r.passenger_id)).size]);
-  });
-  output.push([]);
-
-  // ── View 3: by sector
-  output.push(['[view3] by_sector']);
-  output.push(['booking_date', 'sector','departure_station','arrival_station','flight_type','flight_duration_category','booking_promo_code','ssr_count','unique_pax']);
-  const v3 = groupBy(rows, r => `${r.booking_created_date_my_only}|${r.departure_station}|${r.arrival_station}|${r.flight_type}|${r.flight_duration_category}|${r.booking_promo_code}`);
-  Object.entries(v3).forEach(([key, grp]) => {
-    const [bDate, dep, arr, ftype, dur, promo] = key.split('|');
-    output.push([bDate, `${dep}-${arr}`, dep, arr, ftype, dur, promo, grp.length, new Set(grp.map(r=>r.passenger_id)).size]);
-  });
-  output.push([]);
-
-  // ── View 4: by promo split
-  output.push(['[view4] by_promo']);
-  output.push(['booking_date', 'booking_promo_code','flight_type','ssr_code','ssr_count','unique_pax']);
-  const v4 = groupBy(rows, r => `${r.booking_created_date_my_only}|${r.booking_promo_code}|${r.flight_type}|${r.ssr_code}`);
-  Object.entries(v4).forEach(([key, grp]) => {
-    const [bDate, promo, ftype, ssr] = key.split('|');
-    output.push([bDate, promo, ftype, ssr, grp.length, new Set(grp.map(r=>r.passenger_id)).size]);
-  });
-  output.push([]);
-
-  // ── View 5: by flight
-  output.push(['[view5] by_flight']);
-  output.push(['booking_date', 'departure_date', 'carrier_code', 'flight_number', 'booking_promo_code', 'ssr_count', 'unique_pax']);
-  const v5 = groupBy(rows, r => `${r.booking_created_date_my_only}|${r.departure_date}|${r.carrier_code}|${r.flight_number}|${r.booking_promo_code}`);
-  Object.entries(v5).forEach(([key, grp]) => {
-    const [bDate, dDate, carrier, flight, promo] = key.split('|');
-    output.push([bDate, dDate, carrier, flight, promo, grp.length, new Set(grp.map(r=>r.passenger_id)).size]);
-  });
-
-  sheet.getRange(1, 1, output.length, Math.max(...output.map(r=>r.length))).setValues(
-    output.map(r => { while(r.length < 9) r.push(''); return r; })
-  );
-
-  [1,6,...findSectionRows(output)].forEach(r => {
-    try { sheet.getRange(r, 1, 1, 9).setFontWeight('bold'); } catch(e){}
+  rebuildChart('c5', 'bar', {
+    labels: sortedF.map(s => s[0]),
+    datasets: [{ data: sortedF.map(s => s[1]), backgroundColor: '#1a1a1a', borderRadius: 3 }]
+  }, {
+    indexAxis: 'y',
+    scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.06)' } }, y: { ticks: { color: '#6b7280', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.06)' } } }
   });
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
-function groupBy(arr, keyFn) {
-  return arr.reduce((acc, item) => {
-    const k = keyFn(item);
-    if (!acc[k]) acc[k] = [];
-    acc[k].push(item);
-    return acc;
-  }, {});
+function rebuildChart(id, type, data, options) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), { type, data, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, ...options }});
 }
-
-function findSectionRows(output) {
-  const rows = [];
-  output.forEach((r, i) => { if (typeof r[0] === 'string' && r[0].startsWith('[view')) rows.push(i + 1); });
-  return rows;
-}
-
-function setupTrigger() {
-  ScriptApp.getProjectTriggers().forEach(t => {
-    if (t.getHandlerFunction() === 'runPipeline') ScriptApp.deleteTrigger(t);
-  });
-  ScriptApp.newTrigger('runPipeline')
-    .timeBased()
-    .everyDays(1)
-    .atHour(9)
-    .create();
-}
+function legend(pairs) { return pairs.map(([c, l]) => `<span><span class="legend-dot" style="background:${c}"></span>${l}</span>`).join(''); }
+loadData();
+</script>
+</body>
+</html>
