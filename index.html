@@ -9,7 +9,6 @@
 <style>
   /* ── Reset & Base ────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
     --bg:        #f5f6f8;
     --surface:   #ffffff;
@@ -24,359 +23,133 @@
     --mono:      'IBM Plex Mono', monospace;
     --sans:      'IBM Plex Sans', sans-serif;
   }
-
-  html, body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  /* ── Layout ──────────────────────────────── */
-  .shell {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 24px 64px;
-  }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+  .shell { max-width: 1280px; margin: 0 auto; padding: 0 24px 64px; }
 
   /* ── Header ──────────────────────────────── */
-  header {
-    padding: 24px 0 20px;
-    border-bottom: 2px solid var(--accent);
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .header-logo {
-    background: #D0021B;
-    color: #ffffff !important;
-    font-family: var(--sans);
-    font-weight: 700;
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    margin-right: 10px;
-    letter-spacing: .02em;
-    display: inline-block;
-  }
-  .header-left h1 {
-    font-family: var(--sans);
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-  }
+  header { padding: 24px 0 20px; border-bottom: 2px solid var(--accent); display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .header-logo { background: #D0021B; color: #ffffff !important; font-family: var(--sans); font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 4px; margin-right: 10px; letter-spacing: .02em; display: inline-block; }
+  .header-left h1 { font-family: var(--sans); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); display: flex; align-items: center; }
   .header-left h1 span { color: var(--accent); }
-  .header-left p {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 3px;
-    font-family: var(--mono);
-  }
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .badge {
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    background: var(--surface);
-  }
+  .header-left p { font-size: 12px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); background: var(--surface); }
   .badge.live { border-color: var(--accent); color: var(--accent); background: #fff0f0; }
-  #lastUpdated { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 
   /* ── Controls ────────────────────────────── */
-  .controls {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 24px;
-  }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
   .controls label { font-size: 11px; color: var(--muted); font-family: var(--mono); display: block; margin-bottom: 4px; }
-  .controls select {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 13px;
-    padding: 6px 28px 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    min-width: 140px;
-    box-shadow: 0 1px 2px rgba(0,0,0,.06);
-  }
+  .controls select { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 6px 28px 6px 10px; border-radius: 6px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; min-width: 140px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
   .controls select:hover { border-color: var(--accent); }
-  .btn-refresh {
-    background: var(--accent);
-    border: none;
-    color: #fff;
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 500;
-    padding: 6px 18px;
-    border-radius: 6px;
-    cursor: pointer;
-    align-self: flex-end;
-    transition: background .15s;
-  }
+  .btn-refresh { background: var(--accent); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 6px 18px; border-radius: 6px; cursor: pointer; align-self: flex-end; transition: background .15s; }
   .btn-refresh:hover { background: #b0011a; }
 
   /* ── Metric cards ────────────────────────── */
-  .metrics {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-  .metric {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px 18px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
-  }
-  .metric::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent-c, var(--accent));
-  }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; position: relative; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .metric::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent-c, var(--accent)); }
   .metric-label { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
   .metric-value { font-size: 26px; font-weight: 600; color: var(--text); }
   .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-  /* ── Section headings ────────────────────── */
-  .section-title {
-    font-family: var(--sans);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    color: var(--muted);
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-  }
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
   /* ── Chart panels ────────────────────────── */
+  .panel-title { font-family: var(--sans); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .grid-1 { margin-bottom: 16px; }
   @media (max-width: 780px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
-  }
-  .panel-title {
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-  }
-  .panel-title span { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
   .chart-wrap { position: relative; width: 100%; }
-
-  /* ── Legend ──────────────────────────────── */
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 12px;
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--sans);
-  }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 11px; color: var(--muted); font-family: var(--sans); }
   .legend span { display: flex; align-items: center; gap: 5px; }
   .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-  /* ── Loader / Error ──────────────────────── */
-  #loader {
-    position: fixed;
-    inset: 0;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    gap: 16px;
-    transition: opacity .4s;
-  }
+  /* ── Loader ─────────────────────────────── */
+  #loader { position: fixed; inset: 0; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 16px; transition: opacity .4s; }
   #loader.hidden { opacity: 0; pointer-events: none; }
-  .spinner {
-    width: 32px; height: 32px;
-    border: 2px solid #eee;
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin .8s linear infinite;
-  }
+  .spinner { width: 32px; height: 32px; border: 2px solid #eee; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .loader-text { font-family: var(--sans); font-size: 13px; color: var(--muted); }
-  .error-box {
-    background: #fff0f0;
-    border: 1px solid #fca5a5;
-    color: var(--accent);
-    border-radius: 8px;
-    padding: 16px 20px;
-    font-family: var(--sans);
-    font-size: 13px;
-    margin-bottom: 24px;
-    display: none;
-  }
+  .error-box { background: #fff0f0; border: 1px solid #fca5a5; color: var(--accent); border-radius: 8px; padding: 16px 20px; font-family: var(--sans); font-size: 13px; margin-bottom: 24px; display: none; }
 </style>
 </head>
 <body>
 
-<div id="loader">
-  <div class="spinner"></div>
-  <p class="loader-text">loading data from secure API…</p>
-</div>
+<div id="loader"><div class="spinner"></div><p style="font-size:13px;color:#6b7280;font-family:'IBM Plex Sans'">loading data from secure API…</p></div>
 
 <div class="shell">
-
   <header>
     <div class="header-left">
       <h1><span class="header-logo">AirAsia</span> Free Meal <span>Dashboard</span></h1>
       <p id="lastUpdated">—</p>
     </div>
-    <div class="header-right">
-      <span class="badge live">● live</span>
-      <span class="badge" id="runBadge">—</span>
-    </div>
+    <div class="header-right"><span class="badge live">● live</span><span class="badge" id="runBadge">—</span></div>
   </header>
 
   <div class="controls">
-    <div>
-      <label>Departure date</label>
-      <select id="fDate" onchange="render()"><option value="all">All dates</option></select>
-    </div>
-    <div>
-      <label>Duration</label>
-      <select id="fDur" onchange="render()">
-        <option value="all">All durations</option>
-        <option value="< 75 mins">< 75 mins</option>
-        <option value=">= 75 mins">>= 75 mins</option>
-      </select>
-    </div>
-    <div>
-      <label>Carrier</label>
-      <select id="fCarrier" onchange="render()"><option value="all">All carriers</option></select>
-    </div>
-    <div>
-      <label>Promo</label>
-      <select id="fPromo" onchange="render()">
-        <option value="all">All</option>
-        <option value="FREEMEAL">FREEMEAL only</option>
-        <option value="null">Paid meals only</option>
-      </select>
-    </div>
+    <div><label>Departure date</label><select id="fDate" onchange="render()"><option value="all">All dates</option></select></div>
+    <div><label>Duration</label><select id="fDur" onchange="render()"><option value="all">All durations</option><option value="< 75 mins">< 75 mins</option><option value=">= 75 mins">>= 75 mins</option></select></div>
+    <div><label>Carrier</label><select id="fCarrier" onchange="render()"><option value="all">All carriers</option></select></div>
+    <div><label>Promo</label><select id="fPromo" onchange="render()"><option value="all">All</option><option value="FREEMEAL">FREEMEAL only</option><option value="null">Paid meals only</option></select></div>
     <button class="btn-refresh" onclick="loadData()">↺ Refresh</button>
   </div>
 
   <div class="error-box" id="errorBox"></div>
-
   <div class="metrics" id="metrics"></div>
 
   <div class="grid-2">
-    <div class="panel">
-      <p class="panel-title">01 — SSR count by date &amp; duration</p>
-      <div class="legend" id="leg1"></div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c1" role="img" aria-label="Grouped bar chart of SSR count by departure date and flight duration"></canvas></div>
-    </div>
-    <div class="panel">
-      <p class="panel-title">02 — SSR count by carrier</p>
-      <div class="legend" id="leg2"></div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c2" role="img" aria-label="Bar chart of SSR count per carrier code"></canvas></div>
-    </div>
+    <div class="panel"><p class="panel-title">01 — SSR count by date &amp; duration</p><div class="legend" id="leg1"></div><div class="chart-wrap" style="height:220px"><canvas id="c1"></canvas></div></div>
+    <div class="panel"><p class="panel-title">02 — SSR count by carrier</p><div class="legend" id="leg2"></div><div class="chart-wrap" style="height:220px"><canvas id="c2"></canvas></div></div>
   </div>
 
   <div class="grid-1 panel" style="margin-bottom:16px">
     <p class="panel-title">03 — Top sectors by SSR count</p>
-    <div class="chart-wrap" id="c3wrap" style="height:280px"><canvas id="c3" role="img" aria-label="Horizontal bar chart of SSR count per route sector"></canvas></div>
+    <div class="chart-wrap" id="c3wrap" style="height:280px"><canvas id="c3"></canvas></div>
   </div>
 
   <div class="grid-1 panel" style="margin-bottom:16px">
     <p class="panel-title">04 — FREEMEAL vs paid meal split</p>
     <div class="legend" id="leg4"></div>
-    <div class="chart-wrap" style="height:220px"><canvas id="c4" role="img" aria-label="Stacked bar chart showing FREEMEAL versus paid meal SSR counts by flight type"></canvas></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="c4"></canvas></div>
   </div>
 
   <div class="grid-1 panel">
-    <p class="panel-title">05 — Top 10 Flights with the most SSR</p>
-    <div class="legend" id="leg5"></div>
-    <div class="chart-wrap" id="c5wrap" style="height:300px"><canvas id="c5" role="img" aria-label="Bar chart of top 10 flights by SSR count"></canvas></div>
+    <p class="panel-title">05 — Top Flights by SSR Count &amp; Date</p>
+    <div class="chart-wrap" id="c5wrap" style="height:300px"><canvas id="c5"></canvas></div>
   </div>
 
-</div><script>
+</div>
+
+<script>
 // ── CONFIG ────────────────────────────────────────────────
-// 这是能绕过受限表格完美拉取数据的个人 API URL
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzTOtU7s-oBkqCbfOff43tHHf3XzCyWqYVG4yfP1FRaJ8GUQRZ9Dk-FBwmD0buxU3NgSA/exec';
 // ──────────────────────────────────────────────────────────
 
 let allRows = [];
 const charts = {};
 
-// ── LOAD ──────────────────────────────────────────────────
 async function loadData() {
-  showLoader(true);
-  hideError();
+  document.getElementById('loader').classList.remove('hidden');
+  document.getElementById('errorBox').style.display = 'none';
   try {
     const res = await fetch(WEB_APP_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    
-    // 直接获取由后台返回的干净二维数组
     allRows = await res.json(); 
-    
     populateFilters();
     render();
   } catch(e) {
-    showError('Could not load data. Make sure the API is running correctly.<br><br>Error: ' + e.message);
+    document.getElementById('errorBox').innerHTML = 'Could not load data. Make sure the API is running correctly.<br><br>Error: ' + e.message;
+    document.getElementById('errorBox').style.display = 'block';
   } finally {
-    showLoader(false);
+    document.getElementById('loader').classList.add('hidden');
   }
 }
 
-// ── PARSE SECTIONS ────────────────────────────────────────
 function parseSections(raw) {
-  const meta     = {};
+  const meta = {};
   const v1 = [], v2 = [], v3 = [], v4 = [], v5 = [];
   let section = null;
 
   raw.forEach(row => {
-    // 确保读取的是纯文本
     const first = String(row[0] || '').trim();
     if (!first) { section = null; return; }
 
@@ -391,66 +164,45 @@ function parseSections(raw) {
     if (first === '[view4] by_promo')         { section = 'v4'; return; }
     if (first === '[view5] by_flight')        { section = 'v5'; return; }
 
-    // 跳过每段数据的表头
-    if (first === 'booking_date_my' || first === 'departure_date' ||
-        first === 'carrier_code'    || first === 'sector' ||
-        first === 'booking_promo_code') return;
+    if (first === 'departure_date' || first === 'carrier_code' || first === 'sector' || first === 'booking_promo_code') return;
 
-    // 清洗时间格式函数（针对部分可能传过来的长日期格式做保险）
     const toDate = v => v ? String(v).slice(0, 10) : null;
 
-    if (section === 'v1') v1.push({ date: toDate(row[0]), dur: row[1], promo: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
-    if (section === 'v2') v2.push({ carrier: row[0], dur: row[1], promo: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
-    if (section === 'v3') v3.push({ sector: row[0], dep: row[1], arr: row[2], flight_type: row[3], dur: row[4], promo: row[5], ssr_count: +row[6]||0, unique_pax: +row[7]||0 });
-    if (section === 'v4') v4.push({ promo: row[0], flight_type: row[1], ssr_code: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
-    
-    // v5: carrier_code | flight_number | ssr_count
+    if (section === 'v1') v1.push({ date: toDate(row[0]), dur: row[1], promo: row[2], ssr_count: +row[3]||0 });
+    if (section === 'v2') v2.push({ carrier: row[0], dur: row[1], promo: row[2], ssr_count: +row[3]||0 });
+    if (section === 'v3') v3.push({ sector: row[0], flight_type: row[3], dur: row[4], promo: row[5], ssr_count: +row[6]||0 });
+    if (section === 'v4') v4.push({ promo: row[0], flight_type: row[1], ssr_code: row[2], ssr_count: +row[3]||0 });
     if (section === 'v5') {
-      v5.push({ carrier: row[0], flight: row[1], ssr_count: +row[2]||0 });
+      v5.push({ date: toDate(row[0]), carrier: row[1], flight: row[2], promo: row[3], ssr_count: +row[4]||0 });
     }
   });
 
   return { meta, v1, v2, v3, v4, v5 };
 }
 
-// ── FILTERS ───────────────────────────────────────────────
 function populateFilters() {
   const { v1, v2 } = parseSections(allRows);
-  const dates    = [...new Set(v1.map(r => r.date).filter(Boolean))].sort();
+  const dates = [...new Set(v1.map(r => r.date).filter(Boolean))].sort();
   const carriers = [...new Set(v2.map(r => r.carrier).filter(Boolean))].sort();
 
-  const fDate = document.getElementById('fDate');
-  fDate.innerHTML = '<option value="all">All dates</option>' +
-    dates.map(d => `<option value="${d}">${d}</option>`).join('');
-
-  const fCarrier = document.getElementById('fCarrier');
-  fCarrier.innerHTML = '<option value="all">All carriers</option>' +
-    carriers.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('fDate').innerHTML = '<option value="all">All dates</option>' + dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  document.getElementById('fCarrier').innerHTML = '<option value="all">All carriers</option>' + carriers.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
 function getFilters() {
-  return {
-    date:    document.getElementById('fDate').value,
-    dur:     document.getElementById('fDur').value,
-    carrier: document.getElementById('fCarrier').value,
-    promo:   document.getElementById('fPromo').value
-  };
+  return { date: document.getElementById('fDate').value, dur: document.getElementById('fDur').value, carrier: document.getElementById('fCarrier').value, promo: document.getElementById('fPromo').value };
 }
 
 function applyFilters(arr, keyMap, f) {
   return arr.filter(r => {
-    if (f.date    !== 'all' && keyMap.date    && r[keyMap.date]    !== f.date)    return false;
-    if (f.dur     !== 'all' && keyMap.dur     && r[keyMap.dur]     !== f.dur)     return false;
+    if (f.date !== 'all' && keyMap.date && r[keyMap.date] !== f.date) return false;
+    if (f.dur !== 'all' && keyMap.dur && r[keyMap.dur] !== f.dur) return false;
     if (f.carrier !== 'all' && keyMap.carrier && r[keyMap.carrier] !== f.carrier) return false;
-    if (f.promo   !== 'all') {
-      const v = f.promo === 'null' ? null : f.promo;
-      if (keyMap.promo && r[keyMap.promo] !== v) return false;
-    }
+    if (f.promo !== 'all') { const v = f.promo === 'null' ? null : f.promo; if (keyMap.promo && r[keyMap.promo] !== v) return false; }
     return true;
   });
 }
 
-// ── RENDER ────────────────────────────────────────────────
 function render() {
   if (!allRows.length) return;
   const { meta, v1, v2, v3, v4, v5 } = parseSections(allRows);
@@ -460,140 +212,65 @@ function render() {
   const fv2 = applyFilters(v2, { dur:'dur', carrier:'carrier', promo:'promo' }, f);
   const fv3 = applyFilters(v3, { dur:'dur', promo:'promo' }, f);
   const fv4 = applyFilters(v4, { promo:'promo' }, f);
-  const fv5 = applyFilters(v5, { carrier:'carrier' }, f);
+  const fv5 = applyFilters(v5, { date:'date', carrier:'carrier', promo:'promo' }, f);
 
   document.getElementById('lastUpdated').textContent = 'data for: ' + (meta.pipeline_run_date || '—');
   document.getElementById('runBadge').textContent = 'run: ' + (meta.pipeline_run_date || '—');
 
-  const totalSSR   = fv1.reduce((a,r) => a + r.ssr_count, 0);
-  const totalFlts  = meta.unique_flights  || '—';
-  const totalSec   = meta.unique_sectors  || '—';
-  const freemealN  = fv1.filter(r => r.promo === 'FREEMEAL').reduce((a,r)=>a+r.ssr_count,0);
-  
+  const totalSSR = fv1.reduce((a,r) => a + r.ssr_count, 0);
+  const freemealN = fv1.filter(r => r.promo === 'FREEMEAL').reduce((a,r)=>a+r.ssr_count,0);
   document.getElementById('metrics').innerHTML = `
-    <div class="metric" style="--accent-c:var(--accent)">
-      <p class="metric-label">total ssr count</p>
-      <p class="metric-value">${totalSSR.toLocaleString()}</p>
-      <p class="metric-sub">meal ssrs in view</p>
-    </div>
-    <div class="metric" style="--accent-c:var(--accent2)">
-      <p class="metric-label">unique flights</p>
-      <p class="metric-value">${Number(totalFlts).toLocaleString()}</p>
-      <p class="metric-sub">yesterday</p>
-    </div>
-    <div class="metric" style="--accent-c:var(--accent4)">
-      <p class="metric-label">unique sectors</p>
-      <p class="metric-value">${Number(totalSec).toLocaleString()}</p>
-      <p class="metric-sub">routes covered</p>
-    </div>
-    <div class="metric" style="--accent-c:var(--accent3)">
-      <p class="metric-label">freemeal ssrs</p>
-      <p class="metric-value">${freemealN.toLocaleString()}</p>
-      <p class="metric-sub">promo eligible</p>
-    </div>
+    <div class="metric" style="--accent-c:var(--accent)"><p class="metric-label">total ssr count</p><p class="metric-value">${totalSSR.toLocaleString()}</p><p class="metric-sub">meal ssrs in view</p></div>
+    <div class="metric" style="--accent-c:var(--accent2)"><p class="metric-label">unique flights</p><p class="metric-value">${(meta.unique_flights||'—').toLocaleString()}</p><p class="metric-sub">yesterday</p></div>
+    <div class="metric" style="--accent-c:var(--accent4)"><p class="metric-label">unique sectors</p><p class="metric-value">${(meta.unique_sectors||'—').toLocaleString()}</p><p class="metric-sub">routes covered</p></div>
+    <div class="metric" style="--accent-c:var(--accent3)"><p class="metric-label">freemeal ssrs</p><p class="metric-value">${freemealN.toLocaleString()}</p><p class="metric-sub">promo eligible</p></div>
   `;
 
-  // ── Chart 1: date + duration
+  // Chart 1
   const dates = [...new Set(fv1.map(r=>r.date))].sort();
-  const ltData  = dates.map(d => fv1.filter(r=>r.date===d&&r.dur==='< 75 mins').reduce((a,r)=>a+r.ssr_count,0));
-  const gteData = dates.map(d => fv1.filter(r=>r.date===d&&r.dur==='>= 75 mins').reduce((a,r)=>a+r.ssr_count,0));
-  rebuildChart('c1', 'bar', {
-    labels: dates,
-    datasets: [
-      { label:'< 75 mins',  data:ltData,  backgroundColor:'#D0021B', borderRadius:3, borderSkipped:false },
-      { label:'>= 75 mins', data:gteData, backgroundColor:'#f87a7a', borderRadius:3, borderSkipped:false }
-    ]
-  }, { scales:{ x:{ticks:{color:'#6b7280'}, grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}} }, plugins:{legend:{display:false}} });
+  rebuildChart('c1', 'bar', { labels: dates, datasets: [{ label:'< 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='< 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 }, { label:'>= 75 mins', data:dates.map(d=>fv1.filter(r=>r.date===d&&r.dur==='>= 75 mins').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#f87a7a', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg1').innerHTML = legend([['#D0021B','< 75 mins'],['#f87a7a','>= 75 mins']]);
 
-  // ── Chart 2: carrier
+  // Chart 2
   const carriers = [...new Set(fv2.map(r=>r.carrier))].sort();
-  const cData = carriers.map(c => fv2.filter(r=>r.carrier===c).reduce((a,r)=>a+r.ssr_count,0));
-  rebuildChart('c2', 'bar', {
-    labels: carriers,
-    datasets: [{ label:'SSR count', data:cData, backgroundColor:'#e8722a', borderRadius:3, borderSkipped:false }]
-  }, { scales:{ x:{ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}} }, plugins:{legend:{display:false}} });
+  rebuildChart('c2', 'bar', { labels: carriers, datasets: [{ data:carriers.map(c=>fv2.filter(r=>r.carrier===c).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#e8722a', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg2').innerHTML = legend([['#e8722a','SSR count']]);
 
-  // ── Chart 3: sectors horizontal
-  const sMap = {};
-  fv3.forEach(r => { sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
-  const sorted = Object.entries(sMap).sort((a,b)=>b[1]-a[1]).slice(0,14);
-  const c3h = Math.max(220, sorted.length * 32 + 60);
-  document.getElementById('c3wrap').style.height = c3h + 'px';
-  rebuildChart('c3', 'bar', {
-    labels: sorted.map(s=>s[0]),
-    datasets: [{ label:'SSR count', data:sorted.map(s=>s[1]), backgroundColor:'#D0021B', borderRadius:3, borderSkipped:false }]
-  }, { indexAxis:'y', scales:{ x:{beginAtZero:true,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}}, y:{ticks:{color:'#6b7280',font:{size:11}},grid:{color:'rgba(0,0,0,.06)'}} }, plugins:{legend:{display:false}} });
+  // Chart 3
+  const sMap = {}; fv3.forEach(r => { sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
+  const sortedS = Object.entries(sMap).sort((a,b)=>b[1]-a[1]).slice(0,14);
+  document.getElementById('c3wrap').style.height = Math.max(220, sortedS.length * 32 + 60) + 'px';
+  rebuildChart('c3', 'bar', { labels: sortedS.map(s=>s[0]), datasets: [{ data:sortedS.map(s=>s[1]), backgroundColor:'#D0021B', borderRadius:3 }] }, { indexAxis:'y', scales:{ x:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}}, y:{grid:{color:'rgba(0,0,0,.06)'}} }});
 
-  // ── Chart 4: promo split by flight type
+  // Chart 4
   const ftypes = [...new Set(fv4.map(r=>r.flight_type).filter(Boolean))].sort();
-  const freeData = ftypes.map(t => fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0));
-  const paidData = ftypes.map(t => fv4.filter(r=>r.flight_type===t&&(r.promo===null||r.promo==='null'||r.promo==='')).reduce((a,r)=>a+r.ssr_count,0));
-  rebuildChart('c4', 'bar', {
-    labels: ftypes,
-    datasets: [
-      { label:'FREEMEAL', data:freeData, backgroundColor:'#D0021B', borderRadius:3, borderSkipped:false },
-      { label:'Paid meal', data:paidData, backgroundColor:'#1a7a3f', borderRadius:3, borderSkipped:false }
-    ]
-  }, { scales:{ x:{ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}} }, plugins:{legend:{display:false}} });
+  rebuildChart('c4', 'bar', { labels: ftypes, datasets: [{ data:ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#D0021B', borderRadius:3 }, { data:ftypes.map(t=>fv4.filter(r=>r.flight_type===t&&(r.promo===null||r.promo==='null'||r.promo==='')).reduce((a,r)=>a+r.ssr_count,0)), backgroundColor:'#1a7a3f', borderRadius:3 }] }, { scales:{ x:{grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.06)'}} }});
   document.getElementById('leg4').innerHTML = legend([['#D0021B','FREEMEAL'],['#1a7a3f','Paid meal']]);
 
-  // ── Chart 5: Top 10 Flights by SSR count ──────────────
-  const top10Flights = [...fv5].sort((a,b) => b.ssr_count - a.ssr_count).slice(0, 10);
-  const flightLabels = top10Flights.map(f => String(f.carrier) + String(f.flight));
-  const flightData   = top10Flights.map(f => f.ssr_count);
-
-  rebuildChart('c5', 'bar', {
-    labels: flightLabels,
-    datasets: [{
-      label: 'SSR Count',
-      data: flightData,
-      backgroundColor: '#1a1a1a', 
-      borderRadius: 3,
-      borderSkipped: false
-    }]
-  }, {
-    scales: {
-      x: { ticks:{ color:'#6b7280' }, grid:{ color:'rgba(0,0,0,.06)' } },
-      y: { beginAtZero:true, ticks:{ color:'#6b7280' }, grid:{ color:'rgba(0,0,0,.06)' } }
-    },
-    plugins: { legend:{ display:false } }
+  // Chart 5
+  const fltMap = {};
+  fv5.forEach(r => {
+    const fName = `${r.carrier}${r.flight} (${r.date})`;
+    fltMap[fName] = (fltMap[fName]||0) + r.ssr_count;
   });
-  document.getElementById('leg5').innerHTML = legend([['#1a1a1a', 'SSR Count']]);
+  
+  const sortedF = Object.entries(fltMap).sort((a,b) => b[1] - a[1]).slice(0, 15);
+  document.getElementById('c5wrap').style.height = Math.max(220, sortedF.length * 32 + 60) + 'px';
+  
+  rebuildChart('c5', 'bar', {
+    labels: sortedF.map(s => s[0]),
+    datasets: [{ data: sortedF.map(s => s[1]), backgroundColor: '#1a1a1a', borderRadius: 3 }]
+  }, {
+    indexAxis: 'y',
+    scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.06)' } }, y: { ticks: { color: '#6b7280', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.06)' } } }
+  });
 }
 
-// ── HELPERS ───────────────────────────────────────────────
 function rebuildChart(id, type, data, options) {
   if (charts[id]) charts[id].destroy();
-  charts[id] = new Chart(document.getElementById(id), {
-    type,
-    data,
-    options: { responsive:true, maintainAspectRatio:false, ...options }
-  });
+  charts[id] = new Chart(document.getElementById(id), { type, data, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, ...options }});
 }
-
-function legend(pairs) {
-  return pairs.map(([color, label]) =>
-    `<span><span class="legend-dot" style="background:${color}"></span>${label}</span>`
-  ).join('');
-}
-
-function showLoader(v) {
-  document.getElementById('loader').classList.toggle('hidden', !v);
-}
-
-function showError(msg) {
-  const el = document.getElementById('errorBox');
-  el.innerHTML = msg;
-  el.style.display = 'block';
-}
-
-function hideError() {
-  document.getElementById('errorBox').style.display = 'none';
-}
-
-// ── INIT ──────────────────────────────────────────────────
+function legend(pairs) { return pairs.map(([c, l]) => `<span><span class="legend-dot" style="background:${c}"></span>${l}</span>`).join(''); }
 loadData();
 </script>
 </body>
