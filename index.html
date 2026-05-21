@@ -262,7 +262,7 @@
 
 <div id="loader">
   <div class="spinner"></div>
-  <p class="loader-text">loading data from sheets…</p>
+  <p class="loader-text">loading data from secure API…</p>
 </div>
 
 <div class="shell">
@@ -342,6 +342,7 @@
 
 </div><script>
 // ── CONFIG ────────────────────────────────────────────────
+// 这是能绕过受限表格完美拉取数据的个人 API URL
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzTOtU7s-oBkqCbfOff43tHHf3XzCyWqYVG4yfP1FRaJ8GUQRZ9Dk-FBwmD0buxU3NgSA/exec';
 // ──────────────────────────────────────────────────────────
 
@@ -353,45 +354,36 @@ async function loadData() {
   showLoader(true);
   hideError();
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-    const res  = await fetch(url);
+    const res = await fetch(WEB_APP_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    // Strip Google's callback wrapper
-    const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    allRows = parseGviz(json);
+    
+    // 直接获取由后台返回的干净二维数组
+    allRows = await res.json(); 
+    
     populateFilters();
     render();
   } catch(e) {
-    showError('Could not load data from Google Sheets. Make sure the sheet is published (File → Share → Publish to web) and SHEET_ID is set correctly.<br><br>Error: ' + e.message);
+    showError('Could not load data. Make sure the API is running correctly.<br><br>Error: ' + e.message);
   } finally {
     showLoader(false);
   }
 }
 
-// ── PARSE GVIZ ────────────────────────────────────────────
-function parseGviz(json) {
-  const cols = json.table.cols.map(c => c.label);
-  return (json.table.rows || []).map(r => {
-    const obj = {};
-    cols.forEach((c, i) => { obj[c] = r.c[i] ? r.c[i].v : null; });
-    return obj;
-  });
-}
-
+// ── PARSE SECTIONS ────────────────────────────────────────
 function parseSections(raw) {
   const meta     = {};
   const v1 = [], v2 = [], v3 = [], v4 = [], v5 = [];
   let section = null;
 
   raw.forEach(row => {
-    const first = String(row[Object.keys(row)[0]] ?? '').trim();
+    // 确保读取的是纯文本
+    const first = String(row[0] || '').trim();
     if (!first) { section = null; return; }
 
-    if (first === 'pipeline_run_date') { meta.pipeline_run_date = row[Object.keys(row)[1]]; return; }
-    if (first === 'total_ssr_count')   { meta.total_ssr_count   = row[Object.keys(row)[1]]; return; }
-    if (first === 'unique_flights')    { meta.unique_flights    = row[Object.keys(row)[1]]; return; }
-    if (first === 'unique_sectors')    { meta.unique_sectors    = row[Object.keys(row)[1]]; return; }
+    if (first === 'pipeline_run_date') { meta.pipeline_run_date = row[1]; return; }
+    if (first === 'total_ssr_count')   { meta.total_ssr_count   = row[1]; return; }
+    if (first === 'unique_flights')    { meta.unique_flights    = row[1]; return; }
+    if (first === 'unique_sectors')    { meta.unique_sectors    = row[1]; return; }
 
     if (first === '[view1] by_date_duration') { section = 'v1'; return; }
     if (first === '[view2] by_carrier')       { section = 'v2'; return; }
@@ -399,22 +391,22 @@ function parseSections(raw) {
     if (first === '[view4] by_promo')         { section = 'v4'; return; }
     if (first === '[view5] by_flight')        { section = 'v5'; return; }
 
-    // Skip header rows
+    // 跳过每段数据的表头
     if (first === 'booking_date_my' || first === 'departure_date' ||
         first === 'carrier_code'    || first === 'sector' ||
         first === 'booking_promo_code') return;
 
-    const vals = Object.values(row);
+    // 清洗时间格式函数（针对部分可能传过来的长日期格式做保险）
     const toDate = v => v ? String(v).slice(0, 10) : null;
 
-    if (section === 'v1') v1.push({ date: toDate(vals[0]), dur: vals[1], promo: vals[2], ssr_count: +vals[3]||0, unique_pax: +vals[4]||0 });
-    if (section === 'v2') v2.push({ carrier: vals[0], dur: vals[1], promo: vals[2], ssr_count: +vals[3]||0, unique_pax: +vals[4]||0 });
-    if (section === 'v3') v3.push({ sector: vals[0], dep: vals[1], arr: vals[2], flight_type: vals[3], dur: vals[4], promo: vals[5], ssr_count: +vals[6]||0, unique_pax: +vals[7]||0 });
-    if (section === 'v4') v4.push({ promo: vals[0], flight_type: vals[1], ssr_code: vals[2], ssr_count: +vals[3]||0, unique_pax: +vals[4]||0 });
+    if (section === 'v1') v1.push({ date: toDate(row[0]), dur: row[1], promo: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
+    if (section === 'v2') v2.push({ carrier: row[0], dur: row[1], promo: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
+    if (section === 'v3') v3.push({ sector: row[0], dep: row[1], arr: row[2], flight_type: row[3], dur: row[4], promo: row[5], ssr_count: +row[6]||0, unique_pax: +row[7]||0 });
+    if (section === 'v4') v4.push({ promo: row[0], flight_type: row[1], ssr_code: row[2], ssr_count: +row[3]||0, unique_pax: +row[4]||0 });
     
     // v5: carrier_code | flight_number | ssr_count
     if (section === 'v5') {
-      v5.push({ carrier: vals[0], flight: vals[1], ssr_count: +vals[2]||0 });
+      v5.push({ carrier: row[0], flight: row[1], ssr_count: +row[2]||0 });
     }
   });
 
@@ -468,7 +460,7 @@ function render() {
   const fv2 = applyFilters(v2, { dur:'dur', carrier:'carrier', promo:'promo' }, f);
   const fv3 = applyFilters(v3, { dur:'dur', promo:'promo' }, f);
   const fv4 = applyFilters(v4, { promo:'promo' }, f);
-  const fv5 = applyFilters(v5, { carrier:'carrier' }, f); // Only filter by carrier if applicable
+  const fv5 = applyFilters(v5, { carrier:'carrier' }, f);
 
   document.getElementById('lastUpdated').textContent = 'data for: ' + (meta.pipeline_run_date || '—');
   document.getElementById('runBadge').textContent = 'run: ' + (meta.pipeline_run_date || '—');
@@ -477,6 +469,7 @@ function render() {
   const totalFlts  = meta.unique_flights  || '—';
   const totalSec   = meta.unique_sectors  || '—';
   const freemealN  = fv1.filter(r => r.promo === 'FREEMEAL').reduce((a,r)=>a+r.ssr_count,0);
+  
   document.getElementById('metrics').innerHTML = `
     <div class="metric" style="--accent-c:var(--accent)">
       <p class="metric-label">total ssr count</p>
@@ -500,6 +493,7 @@ function render() {
     </div>
   `;
 
+  // ── Chart 1: date + duration
   const dates = [...new Set(fv1.map(r=>r.date))].sort();
   const ltData  = dates.map(d => fv1.filter(r=>r.date===d&&r.dur==='< 75 mins').reduce((a,r)=>a+r.ssr_count,0));
   const gteData = dates.map(d => fv1.filter(r=>r.date===d&&r.dur==='>= 75 mins').reduce((a,r)=>a+r.ssr_count,0));
@@ -512,6 +506,7 @@ function render() {
   }, { scales:{ x:{ticks:{color:'#6b7280'}, grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}} }, plugins:{legend:{display:false}} });
   document.getElementById('leg1').innerHTML = legend([['#D0021B','< 75 mins'],['#f87a7a','>= 75 mins']]);
 
+  // ── Chart 2: carrier
   const carriers = [...new Set(fv2.map(r=>r.carrier))].sort();
   const cData = carriers.map(c => fv2.filter(r=>r.carrier===c).reduce((a,r)=>a+r.ssr_count,0));
   rebuildChart('c2', 'bar', {
@@ -520,6 +515,7 @@ function render() {
   }, { scales:{ x:{ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}}, y:{beginAtZero:true,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}} }, plugins:{legend:{display:false}} });
   document.getElementById('leg2').innerHTML = legend([['#e8722a','SSR count']]);
 
+  // ── Chart 3: sectors horizontal
   const sMap = {};
   fv3.forEach(r => { sMap[r.sector] = (sMap[r.sector]||0) + r.ssr_count; });
   const sorted = Object.entries(sMap).sort((a,b)=>b[1]-a[1]).slice(0,14);
@@ -530,6 +526,7 @@ function render() {
     datasets: [{ label:'SSR count', data:sorted.map(s=>s[1]), backgroundColor:'#D0021B', borderRadius:3, borderSkipped:false }]
   }, { indexAxis:'y', scales:{ x:{beginAtZero:true,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.06)'}}, y:{ticks:{color:'#6b7280',font:{size:11}},grid:{color:'rgba(0,0,0,.06)'}} }, plugins:{legend:{display:false}} });
 
+  // ── Chart 4: promo split by flight type
   const ftypes = [...new Set(fv4.map(r=>r.flight_type).filter(Boolean))].sort();
   const freeData = ftypes.map(t => fv4.filter(r=>r.flight_type===t&&r.promo==='FREEMEAL').reduce((a,r)=>a+r.ssr_count,0));
   const paidData = ftypes.map(t => fv4.filter(r=>r.flight_type===t&&(r.promo===null||r.promo==='null'||r.promo==='')).reduce((a,r)=>a+r.ssr_count,0));
@@ -566,6 +563,7 @@ function render() {
   document.getElementById('leg5').innerHTML = legend([['#1a1a1a', 'SSR Count']]);
 }
 
+// ── HELPERS ───────────────────────────────────────────────
 function rebuildChart(id, type, data, options) {
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart(document.getElementById(id), {
@@ -595,6 +593,7 @@ function hideError() {
   document.getElementById('errorBox').style.display = 'none';
 }
 
+// ── INIT ──────────────────────────────────────────────────
 loadData();
 </script>
 </body>
